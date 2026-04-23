@@ -1,6 +1,6 @@
 {
   "name": "mysql-test",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "displayName": "MySQL Test Run",
   "description": "Syntax highlighting and navigation for MySQL test files (.test, .result, .opt, .cnf)",
   "publisher": "shapled",
@@ -11,7 +11,7 @@
   },
   "icon": "icon.png",
   "engines": {
-    "vscode": "^1.116.0"
+    "vscode": "^1.85.0"
   },
   "categories": [
     "Programming Languages"
@@ -136,7 +136,7 @@
     "package": "node esbuild.js --production && vsce package"
   },
   "devDependencies": {
-    "@types/vscode": "^1.116.0",
+    "@types/vscode": "^1.85.0",
     "@vscode/vsce": "^3.9.1",
     "esbuild": "^0.28.0",
     "typescript": "^6.0.3",

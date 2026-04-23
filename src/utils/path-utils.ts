@@ -76,7 +76,8 @@ export function pairSuffixFileToTest(
 
 /**
  * Resolve a --source or --include path to a .inc file path.
- * The path is relative to the mysql-test root directory.
+ * Paths starting with `../` are relative to the current file's directory.
+ * Other paths are relative to the mysql-test root directory.
  */
 export function resolveIncPathString(
   currentFile: string,
@@ -87,9 +88,17 @@ export function resolveIncPathString(
     return undefined;
   }
 
-  const direct = path.join(root, incPath);
-  if (path.extname(direct) !== ".inc") {
-    return direct + ".inc";
+  let resolved: string;
+  if (incPath.startsWith("../") || incPath.startsWith("./")) {
+    // Relative to current file's directory
+    resolved = path.resolve(path.dirname(currentFile), incPath);
+  } else {
+    // Relative to mysql-test root
+    resolved = path.join(root, incPath);
   }
-  return direct;
+
+  if (path.extname(resolved) !== ".inc") {
+    return resolved + ".inc";
+  }
+  return resolved;
 }

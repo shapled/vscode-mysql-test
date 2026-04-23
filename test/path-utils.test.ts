@@ -216,4 +216,35 @@ describe("resolveIncPathString", () => {
       "/project/mysql-test/suite/innodb/include/innodb_lock_wait_timeout.inc"
     );
   });
+
+  it("should resolve ../include relative to current file directory", () => {
+    expect(
+      resolveIncPathString(
+        "/project/mysql-test/suite/binlog/t/binlog_edge.test",
+        "../include/binlog_edge_common.inc"
+      )
+    ).toBe(
+      "/project/mysql-test/suite/binlog/include/binlog_edge_common.inc"
+    );
+  });
+
+  it("should resolve ../../include from deeply nested files", () => {
+    expect(
+      resolveIncPathString(
+        "/project/mysql-test/suite/aaa/bbb/t/ccc.test",
+        "../../include/common.inc"
+      )
+    ).toBe(
+      "/project/mysql-test/suite/aaa/include/common.inc"
+    );
+  });
+
+  it("should resolve ./ relative to current file directory", () => {
+    expect(
+      resolveIncPathString(
+        "/project/mysql-test/t/big_packets.test",
+        "./big_packets.inc"
+      )
+    ).toBe("/project/mysql-test/t/big_packets.inc");
+  });
 });

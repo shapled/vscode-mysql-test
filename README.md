@@ -2,8 +2,6 @@
   <img src="icon.png" alt="MySQL Test Logo" width="128">
 </p>
 
----
-
 [![GitHub](https://img.shields.io/badge/GitHub-shapled%2Fvscode--mysql--test-181717?logo=github)](https://github.com/shapled/vscode-mysql-test) [![Install](https://img.shields.io/badge/Install-VS_Code_Marketplace-blue?logo=visualstudiocode)](https://marketplace.visualstudio.com/items?itemName=Shapled.mysql-test)
 
 ## Features
@@ -35,7 +33,7 @@ Files are automatically recognized when located under a `mysql-test/` directory 
 
 ## Requirements
 
-- VS Code 1.116.0 or later
+- VS Code 1.85.0 or later
 
 ## Extension Settings
 
@@ -46,6 +44,11 @@ This extension does not add any settings.
 None.
 
 ## Release Notes
+
+### 1.0.2
+
+- Expand VS Code compatibility to 1.85.0+
+- Fix relative path resolution for `--source ../include/xxx.inc`
 
 ### 1.0.1
 
