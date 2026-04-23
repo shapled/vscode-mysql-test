@@ -12,7 +12,8 @@
     "noUnusedParameters": false,
     "moduleResolution": "bundler",
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "resolveJsonModule": true
   },
   "include": ["src/**/*"]
 }

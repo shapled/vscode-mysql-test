@@ -3,6 +3,7 @@ import {
   MtrDefinitionProvider,
   registerPairFileFeatures,
 } from "./features/definition";
+import { MtrHoverProvider } from "./features/hover";
 
 export function activate(context: vscode.ExtensionContext) {
   const selector: vscode.DocumentSelector = [
@@ -16,6 +17,13 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.languages.registerDefinitionProvider(
       selector,
       new MtrDefinitionProvider()
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.languages.registerHoverProvider(
+      selector,
+      new MtrHoverProvider()
     )
   );
 

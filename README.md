@@ -22,6 +22,8 @@ Provides TextMate-based syntax highlighting for MySQL test framework files:
 
 Files are automatically recognized when located under a `mysql-test/` directory tree (e.g. `mysql-test/t/`, `mysql-test/suite/innodb/t/`).
 
+MTR commands are recognized both with the `--` prefix (`--echo text`) and without (`echo text;`), so non-command lines are properly highlighted as SQL.
+
 ### Navigation
 
 - **Go to Paired File** — Click the CodeLens link at the top of each file to jump to related files:
@@ -30,6 +32,14 @@ Files are automatically recognized when located under a `mysql-test/` directory 
 - **Alt+O** — Keyboard shortcut to jump between `.test` and `.result` files
 - **Go to Definition** — Ctrl+Click on `--source` / `--include` paths to jump to `.inc` files
 - **Variable Jump** — Ctrl+Click on `$variable` to jump to its `--let` declaration
+
+### Hover Documentation
+
+Hover over any MTR command to see its syntax, description, usage example, and a link to the official MySQL documentation.
+
+### Cross-Platform Support
+
+Works on Windows (including WSL paths), macOS, and Linux. File pairing and include path resolution handle both forward slashes and backslashes.
 
 ## Requirements
 
@@ -44,6 +54,12 @@ This extension does not add any settings.
 None.
 
 ## Release Notes
+
+### 1.0.3
+
+- Add hover documentation for 90+ MTR commands with syntax, description, examples, and links to official docs
+- Recognize MTR commands without `--` prefix (semicolon-terminated), properly separate them from SQL highlighting
+- Fix CodeLens and file pairing on Windows (backslash paths and WSL paths)
 
 ### 1.0.2
 

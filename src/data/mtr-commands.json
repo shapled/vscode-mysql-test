@@ -1,0 +1,767 @@
+[
+  {
+    "name": "append_file",
+    "syntax": "append_file file_name [terminator]",
+    "description": "append_file is like write_file except that the lines up to the terminator are added to the end of the file. The file is created if it does not exist. The file name argument is subject to variable substitution.",
+    "demos": [
+      "write_file $MYSQL_TMP_DIR/data01;\nline one for the file\nline two for the file\nEOF\nappend_file $MYSQL_TMP_DIR/data01;\nline three for the file\nEOF",
+      "write_file $MYSQL_TMP_DIR/data02 END_OF_FILE;\nline one for the file\nline two for the file\nEND_OF_FILE\nappend_file $MYSQL_TMP_DIR/data02 END_OF_FILE;\nline three for the file\nEND_OF_FILE"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "assert",
+    "syntax": "assert (expr)",
+    "description": "Assert that expr is true; otherwise terminate the test program with an error message indicating that expr failed. expr is parsed as it is for if() and while(), as described at mysqltest Flow Control Constructs.",
+    "demos": [
+      "assert(1);\n      assert($x);\n      assert(!$x);\n      assert(`select count(*) from t1`);"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "cat_file",
+    "syntax": "cat_file file_name",
+    "description": "cat_file writes the contents of the file to the output. The file name argument is subject to variable substitution.",
+    "demos": ["cat_file $MYSQL_TMP_DIR/data01;"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "change_user",
+    "syntax": "change_user [user_name], [password], [db_name]",
+    "description": "Changes the current user and causes the database specified by db_name to become the default database for the current connection.",
+    "demos": ["change_user root;\n--change_user root,,test"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "character_set",
+    "syntax": "character_set charset_name",
+    "description": "Set the default character set to charset_name. Initially, the character set is latin1.",
+    "demos": ["character_set utf8;\n--character_set sjis"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "chmod",
+    "syntax": "chmod octal_mode file_name",
+    "description": "Change the mode of the given file. The file mode must be given as a four-digit octal number. The file name argument is subject to variable substitution, but must evaluate to a literal file name, not a file name pattern.",
+    "demos": ["chmod 0644 $MYSQL_TMP_DIR/data_xxx01;"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "connect",
+    "syntax": "connect (name, host_name, user_name, password, db_name [,port_num [,socket [,options [,default_auth [,compression algorithm, [,compression level]]]]]])",
+    "description": "Open a connection to the server and make the connection the current connection. It can also be used to re-connect a connection that was disconnected by the server. The arguments to connect are: Passing PIPE or SHM on non-Windows systems causes an error, and, similarly, passing SOCKET on Windows systems causes an error. To omit an argument, just leave it blank. For an omitted argument, mysqltest uses an empty string for the first five arguments and the options argument. For omitted port or socket options, mysqltest uses the default port or socket. If you omit all arguments to connect or omit connection name or hostname, it will try to reconnect the current connection using the current options. The last example assumes that the $MASTER_MYPORT variable has already been set (perhaps as an environment variable). If a connection attempt fails initially, mysqltest retries five times if the abort-on-error setting is enabled.",
+    "demos": [
+      "connect; -- reconnects the current connection\nconnect(conn1); --reconnects conn1\nconnect(conn1,,root); --reconnects conn1 and ignores root\nconnect(,localhost); --reconnects the current connection, ignores localhost.\nconnect(,,,); --reconnects the current connection",
+      "connect (conn1,localhost,root,,);\nconnect (conn2,localhost,root,mypass,test);\nconnect (conn1,127.0.0.1,root,,test,$MASTER_MYPORT);"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "connection",
+    "syntax": "connection connection_name",
+    "description": "Select connection_name as the current connection. To select the connection that mysqltest opens when it starts, use the name default. A variable can be used to specify the connection_name value.",
+    "demos": ["connection master;\nconnection conn2;\nconnection default;"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "copy_file",
+    "syntax": "copy_file from_file to_file [retry]",
+    "description": "Copy the file from_file to the file to_file. The command fails if to_file already exists. The file name arguments are subject to variable substitution. copy_file can also take an optional argument retry. If the command fails due to an environmental issue, the command can be retried for a retry number of times. Each retry happens after an interval of one second.",
+    "demos": [
+      "copy_file $MYSQL_TMP_DIR/copy1.txt $MYSQL_TMP_DIR/copy2.txt;\ncopy_file $MYSQL_TMP_DIR/foo.txt $MYSQL_TMP_DIR/foo2.txt 5;"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "copy_files_wildcard",
+    "syntax": "copy_files_wildcard src_dir_name dst_dir_name pattern [retry]",
+    "description": "Copy all files that match the pattern in the source directory to the destination directory. Patterns can use ? to represent any single character, or * for any sequence of 0 or more characters. The . character is treated like any other. The pattern may not include /. If all the files need to be copied, the * wildcard can be used. copy_files_wildcard can also take an optional argument retry. If the command fails due to an environmental issue, the command can be retried for a retry number of times. Each retry happens after an interval of one second. The command works like this:",
+    "demos": [
+      "copy_files_wildcard $MYSQLTEST_VARDIR/std_data/ $MYSQLTEST_VARDIR/copy1/ *.txt;\ncopy_files_wildcard $MYSQLTEST_VARDIR/std_data/ $MYSQLTEST_VARDIR/copy1/ *.txt 5;"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "dec",
+    "syntax": "dec $var_name",
+    "description": "Decrement a numeric variable. If the variable does not have a numeric value, the result is undefined.",
+    "demos": ["dec $count;\ndec $2;"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "delimiter",
+    "syntax": "delimiter str",
+    "description": "Set the command delimiter to str, which may consist of 1 to 15 characters. The default delimiter is the semicolon character (“;”). This is useful or needed when you want to include long SQL statements like CREATE PROCEDURE which include semicolon delimited statements but need to be interpreted as a single statement by mysqltest. If you have set the delimiter to “/” as in the previous example, you can set it back to the default like this:",
+    "demos": ["delimiter /;\n--delimiter stop", "delimiter ;|"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "die",
+    "syntax": "die [message]",
+    "description": "Aborts the test with an error code after printing the given message as the reason. Suppose that a test file contains the following line: When mysqltest encounters that line, it produces the following result and exits:",
+    "demos": [
+      "die Cannot continue;",
+      "mysqltest: At line 1: Cannot continue\nnot ok"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "diff_files",
+    "syntax": "diff_files file_name1 file_name2",
+    "description": "Compare the two files. The command succeeds if the files are the same, and fails if they are different or either file does not exist. The file name arguments are subject to variable substitution.",
+    "demos": [],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "dirty_close",
+    "syntax": "dirty_close connection_name",
+    "description": "Close the named connection. This is like disconnect except that it calls vio_delete() before it closes the connection. If the connection is the current connection, you should use the connection command to switch to a different connection before executing further SQL statements. A variable can be used to specify the connection_name value.",
+    "demos": [],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "disable_abort_on_error",
+    "syntax": "--disable_abort_on_error",
+    "description": "Disable or enable abort-on-error behavior. This setting is enabled by default. With this setting enabled, mysqltest aborts the test when a statement sent to the server results in an unexpected error, and does not generate the .reject file. For discussion of reasons why it can be useful to disable this behavior, see Error Handling.",
+    "demos": ["--disable_abort_on_error\n--enable_abort_on_error"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "disable_async_client",
+    "syntax": "--disable_async_client",
+    "description": "Disable or enable asynchronous communication between the client and the server. With this setting enabled, mysqltest uses non-blocking C API's to communicate with the server. Please note that disable_async_client disables asynchronous communication if it had been enabled either by the –enable_async_client command or the –async-client command line option.",
+    "demos": ["--disable_async_client\n--enable_async_client"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "disable_connect_log",
+    "syntax": "--disable_connect_log",
+    "description": "Disable or enable logging of creation or switch of connections. Connection logging is disabled by default. With this setting enabled, mysqltest enters lines in the test results to show when connections are created, switched or disconnected. If query logging is turned off using disable_query_log, connection logging is also turned off, until query log is re- enabled.",
+    "demos": ["--disable_connect_log\n--enable_connect_log"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "disable_info",
+    "syntax": "--disable_info",
+    "description": "Disable or enable additional information about SQL statement results. Information display is disabled by default. With this setting enabled, mysqltest displays the affected-rows count and the output from the mysql_info() C API function. The “affected-rows” value is “rows selected” for statements such as SELECT and “rows modified” for statements that change data.",
+    "demos": ["--disable_info\n--enable_info"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "disable_metadata",
+    "syntax": "--disable_metadata",
+    "description": "Disable or enable query metadata display. Metadata display is disabled by default. With this setting enabled, mysqltest adds query metadata to the result. This information consists of the values corresponding to the members of the MYSQL_FIELD C API data structure, for each column of the result.",
+    "demos": ["--disable_metadata\n--enable_metadata"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "disable_ps_protocol",
+    "syntax": "--disable_ps_protocol",
+    "description": "Disable or enable prepared-statement protocol. This setting is disabled by default unless the --ps-protocol option is given.",
+    "demos": ["--disable_ps_protocol\n--enable_ps_protocol"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "disable_query_log",
+    "syntax": "--disable_query_log",
+    "description": "Disable or enable query logging. This setting is enabled by default. With this setting enabled, mysqltest echoes input SQL statements to the test result. One reason to disable query logging is to reduce the amount of test output produced, which also makes comparison of actual and expected results more efficient.",
+    "demos": ["--disable_query_log\n--enable_query_log"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "disable_result_log",
+    "syntax": "--disable_result_log",
+    "description": "Disable or enable the result log. This setting is enabled by default. With this setting enabled, mysqltest displays query results (and results from commands such as echo and exec).",
+    "demos": ["--disable_result_log\n--enable_result_log"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "disable_rpl_parse",
+    "syntax": "--disable_rpl_parse",
+    "description": "Disable or enable parsing of statements to determine whether they go to the master or slave. The default is whatever the default is for the C API library.",
+    "demos": ["--disable_rpl_parse\n--enable_rpl_parse"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "disable_session_track_info",
+    "syntax": "--disable_session_track_info",
+    "description": "Disable or enable display of session tracking information. Session-tracking display disabled by default.",
+    "demos": ["--disable_session_track_info\n--enable_session_track_info"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "disable_testcase",
+    "syntax": "disable_testcase bug_number, enable_testcase",
+    "description": "Disable or enable a section from a test case. This setting is enabled by default. When disabled, mysqltest ignores everything until enable_testcase. These commands are useful for disabling a section inside a .test file that fails due to a known bug, without having to disable the entire test case. Bug number is a mandatory argument to disable_testcase command and it should be in BUG#XXXX format where keyword BUG is case-insensitive and XXXX should contain only digits.",
+    "demos": ["--disable_testcase BUG#XXXX\n--enable_testcase"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "disable_warnings",
+    "syntax": "--disable_warnings",
+    "description": "Disable or enable warnings. This setting is enabled by default. With this setting enabled, mysqltest uses SHOW WARNINGS to display any warnings produced by SQL statements. disable_warnings and enable_warnings commands can take an optional argument specifying one or more comma-separated list of warnings to be disabled or enabled. Each warning specified should be in symbolic error name format. Or disable_warnings and enable_warnings commands can also take a second optional argument, \"ONCE\", which when specified will disable or enable the warnings for next statement only. Or",
+    "demos": [
+      "--disable_warnings\n--enable_warnings",
+      "--disable_warnings ER_BAD_TABLE_ERROR,ER_YES\nDROP TABLE IF EXISTS t1;\n--enable_warnings ER_BAD_TABLE_ERROR,ER_YES",
+      "--disable_warnings\nDROP TABLE IF EXISTS t1;\n--enable_warnings ER_BAD_TABLE_ERROR,ER_YES\nDROP TABLE IF EXISTS t1;\n--disable_warnings ER_BAD_TABLE_ERROR,ER_YES\n--enable_warnings",
+      "--disable_warnings ER_BAD_TABLE_ERROR ONCE\nDROP TABLE IF EXISTS t1;",
+      "--disable_warnings\nDROP TABLE IF EXISTS t1;\n--enable_warnings ER_BAD_TABLE_ERROR ONCE\nDROP TABLE IF EXISTS t1;\n--enable_warnings"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "disconnect",
+    "syntax": "disconnect connection_name",
+    "description": "Close the named connection. If the connection is the current connection, you should use the connection command to switch to a different connection before executing further SQL statements.",
+    "demos": ["disconnect conn2;\ndisconnect slave;"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "echo",
+    "syntax": "echo text",
+    "description": "Echo the text to the test result. References to variables within the text are replaced with the corresponding values. The text does not need to be enclosed in quotation marks; if it is, the quotation marks will be included in the output.",
+    "demos": ["--echo Another sql_mode test\necho should return only 1 row;"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "enable_abort_on_error",
+    "syntax": "--enable_abort_on_error",
+    "description": "Disable or enable abort-on-error behavior. This setting is enabled by default. With this setting enabled, mysqltest aborts the test when a statement sent to the server results in an unexpected error, and does not generate the .reject file. For discussion of reasons why it can be useful to disable this behavior, see Error Handling.",
+    "demos": ["--disable_abort_on_error\n--enable_abort_on_error"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "enable_async_client",
+    "syntax": "--enable_async_client",
+    "description": "Disable or enable asynchronous communication between the client and the server. With this setting enabled, mysqltest uses non-blocking C API's to communicate with the server. Please note that disable_async_client disables asynchronous communication if it had been enabled either by the –enable_async_client command or the –async-client command line option.",
+    "demos": ["--disable_async_client\n--enable_async_client"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "enable_connect_log",
+    "syntax": "--enable_connect_log",
+    "description": "Disable or enable logging of creation or switch of connections. Connection logging is disabled by default. With this setting enabled, mysqltest enters lines in the test results to show when connections are created, switched or disconnected. If query logging is turned off using disable_query_log, connection logging is also turned off, until query log is re- enabled.",
+    "demos": ["--disable_connect_log\n--enable_connect_log"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "enable_info",
+    "syntax": "--enable_info",
+    "description": "Disable or enable additional information about SQL statement results. Information display is disabled by default. With this setting enabled, mysqltest displays the affected-rows count and the output from the mysql_info() C API function. The “affected-rows” value is “rows selected” for statements such as SELECT and “rows modified” for statements that change data.",
+    "demos": ["--disable_info\n--enable_info"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "enable_metadata",
+    "syntax": "--enable_metadata",
+    "description": "Disable or enable query metadata display. Metadata display is disabled by default. With this setting enabled, mysqltest adds query metadata to the result. This information consists of the values corresponding to the members of the MYSQL_FIELD C API data structure, for each column of the result.",
+    "demos": ["--disable_metadata\n--enable_metadata"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "enable_ps_protocol",
+    "syntax": "--enable_ps_protocol",
+    "description": "Disable or enable prepared-statement protocol. This setting is disabled by default unless the --ps-protocol option is given.",
+    "demos": ["--disable_ps_protocol\n--enable_ps_protocol"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "enable_query_log",
+    "syntax": "--enable_query_log",
+    "description": "Disable or enable query logging. This setting is enabled by default. With this setting enabled, mysqltest echoes input SQL statements to the test result. One reason to disable query logging is to reduce the amount of test output produced, which also makes comparison of actual and expected results more efficient.",
+    "demos": ["--disable_query_log\n--enable_query_log"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "enable_result_log",
+    "syntax": "--enable_result_log",
+    "description": "Disable or enable the result log. This setting is enabled by default. With this setting enabled, mysqltest displays query results (and results from commands such as echo and exec).",
+    "demos": ["--disable_result_log\n--enable_result_log"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "enable_rpl_parse",
+    "syntax": "--enable_rpl_parse",
+    "description": "Disable or enable parsing of statements to determine whether they go to the master or slave. The default is whatever the default is for the C API library.",
+    "demos": ["--disable_rpl_parse\n--enable_rpl_parse"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "enable_session_track_info",
+    "syntax": "--enable_session_track_info",
+    "description": "Disable or enable display of session tracking information. Session-tracking display disabled by default.",
+    "demos": ["--disable_session_track_info\n--enable_session_track_info"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "enable_warnings",
+    "syntax": "--enable_warnings",
+    "description": "Disable or enable warnings. This setting is enabled by default. With this setting enabled, mysqltest uses SHOW WARNINGS to display any warnings produced by SQL statements. disable_warnings and enable_warnings commands can take an optional argument specifying one or more comma-separated list of warnings to be disabled or enabled. Each warning specified should be in symbolic error name format. Or disable_warnings and enable_warnings commands can also take a second optional argument, \"ONCE\", which when specified will disable or enable the warnings for next statement only. Or",
+    "demos": [
+      "--disable_warnings\n--enable_warnings",
+      "--disable_warnings ER_BAD_TABLE_ERROR,ER_YES\nDROP TABLE IF EXISTS t1;\n--enable_warnings ER_BAD_TABLE_ERROR,ER_YES",
+      "--disable_warnings\nDROP TABLE IF EXISTS t1;\n--enable_warnings ER_BAD_TABLE_ERROR,ER_YES\nDROP TABLE IF EXISTS t1;\n--disable_warnings ER_BAD_TABLE_ERROR,ER_YES\n--enable_warnings",
+      "--disable_warnings ER_BAD_TABLE_ERROR ONCE\nDROP TABLE IF EXISTS t1;",
+      "--disable_warnings\nDROP TABLE IF EXISTS t1;\n--enable_warnings ER_BAD_TABLE_ERROR ONCE\nDROP TABLE IF EXISTS t1;\n--enable_warnings"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "end",
+    "syntax": "end",
+    "description": "End an if or while block. If there is no such block open, mysqltest exits with an error. See mysqltest Flow Control Constructs, for information on flow-control constructs. mysqltest considers } and end the same: Both end the current block.",
+    "demos": [],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "end_timer",
+    "syntax": "end_timer",
+    "description": "Stop the timer. By default, the timer does not stop until just before mysqltest exits.",
+    "demos": [],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "error",
+    "syntax": "error error_code [, error_code] ...",
+    "description": "Specify one or more comma-separated error values that the next command is expected to return. Each error_code value is a MySQL-specific error number or an SQLSTATE value. (These are the kinds of values returned by the mysql_errno() and mysql_sqlstate() C API functions, respectively.) If you specify an SQLSTATE value, it should begin with an S to enable mysqltest to distinguish it from a MySQL error number. For example, the error number 1050 and the SQLSTATE value 42S01 are equivalent, so the following commands specify the same expected error: SQLSTATE values should be five characters long and may contain only digits and uppercase letters. It is also possible to use the symbolic error name from mysqld_error.h: It is also possible to use symbolic error names from errmsg.h to refer to client errors: Finally, you can assign either a numerical code or a symbolic error name to a variable and refer to that in the error command. Numbers, symbolic names and variables may be freely mixed. If a statement fails with an error that has not been specified as expected by means of a error command, mysqltest aborts and reports the error message returned by the MySQL server. If a statement fails with an error that has been specified as expected by means of a error command, mysqltest does not abort. Instead, it continues and writes a message to the result output. Input: mysqltest reports: Input: mysqltest reports: An error value of 0 or S00000 means “no error,” so using either for an error command is the same as saying explicitly, “no error is expected, the statement must succeed.”. To indicate that you expect success or a given error or errors, specify 0 or S00000 first in the error list. If you put the no-error value later in the list, the test will abort if the statement is successful. That is, the following two commands have different effects: The second form literally means the next command may fail with error code 0, (rather than succeed) which in practice never happens: You can use error to specify shell status values for testing the value of shell commands executed using the exec command. This does not apply to system, for which the command status is ignored. If you use error in combination with send and reap, the error should be used just before the reap, as this is the command that actually gives the result and the potential error. Variables may also be used as arguments to the error command; these may contain a number (including 0), an SQLSTATE or a symbolic error name. Variables and constant values may be freely combined.",
+    "demos": [
+      "--error 1050\n--error S42S01",
+      "--error ER_TABLE_EXISTS_ERROR",
+      "--error CR_SERVER_GONE_ERROR",
+      "--error S42S02\nDROP TABLE t;",
+      "ERROR 42S02: Unknown table 't'",
+      "--error S41S01,S42S02\nDROP TABLE t;",
+      "Got one of the listed errors",
+      "--error 0,1051\n--error 1051,0"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "eval",
+    "syntax": "eval statement",
+    "description": "Evaluate the statement by replacing references to variables within the text with the corresponding values. Then send the resulting statement to the server to be executed. Use “$” to specify a literal “$” character. The advantage of using eval statement versus just statement is that eval provides variable expansion.",
+    "demos": [
+      "eval USE $DB;\neval CHANGE REPLICATION SOURCE TO SOURCE_PORT=$SLAVE_MYPORT;\neval PREPARE STMT1 FROM \"$my_stmt\";"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "exec",
+    "syntax": "exec command [arg] ...",
+    "description": "Execute the shell command using the popen() library call. References to variables within the command are replaced with the corresponding values. Use “\\$” to specify a literal “$” character. On Cygwin, the command is executed from cmd.exe, so commands such as rm cannot be executed with exec. Use system instead.",
+    "demos": [
+      "--exec $MYSQL_DUMP --xml --skip-create test\n--exec rm $MYSQLTEST_VARDIR/tmp/t1\nexec $MYSQL_SHOW test -v -v;"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "exec_in_background",
+    "syntax": "exec_in_background command [arg] ...",
+    "description": "Execute a shell command using the popen() library call in the background. When a command is executed using exec_in_background, mysqltest does not wait for it to finish, nor attempt to read the output of it.",
+    "demos": [
+      "--exec_in_background $MYSQL_DUMP --xml --skip-create test\n--exec_in_background rm $MYSQLTEST_VARDIR/tmp/t1"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "execw",
+    "syntax": "execw command [arg] ...",
+    "description": "This is a variant of the exec command which is needed on Windows if the command line contains non-ASCII characters. Otherwise it works exactly the same. On platforms other than Windows there is no difference, but on Windows it uses a different version of the popen() library call. So if your command line contains non-ASCII characters, it is recommended to use execw instead of exec.",
+    "demos": [],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "exit",
+    "syntax": "exit",
+    "description": "Terminate the test case. This is considered a “normal termination.” That is, using exit does not result in evaluation of the test case as having failed. It is not necessary to use exit at the end of a test case, as the test case will terminate normally when reaching the end without failure.",
+    "demos": [],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "expr",
+    "syntax": "expr $var_name= operand1 operator operand2",
+    "description": "Evaluate an expression and assign the result to a variable. The result is also the return value of the expr command itself. operand1 and operand2 must be valid variables. expr supports these mathematical operators: expr supports these logical operators: expr supports these bitwise operators: Operations are subject to these conditions:",
+    "demos": [
+      "--let $val1= 10\n--let $var2= 20\n--expr $res= $var1 + $var2\n--echo $res",
+      "+  Addition\n-  Subtraction\n*  Multiplication\n/  Division\n%  Modulo",
+      "&amp;&amp;  Logical AND\n||  Logical OR",
+      "&amp;  Binary AND\n|  Binary OR\n^  Binary XOR\n&lt;&lt; Binary left shift\n&gt;&gt; Binary right shift"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "file_exists",
+    "syntax": "file_exists file_name [retry]",
+    "description": "file_exists succeeds if the named file exists and fails otherwise. The file name argument is subject to variable substitution. file_exists can also take an optional argument retry. If the command fails due to an environmental issue, the command can be retried for a retry number of times. Each retry happens after an interval of one second.",
+    "demos": ["file_exists /etc/passwd;\nfile_exists /etc/passwd 5;"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "force",
+    "syntax": "force-cpdir src_dir_name dst_dir_name",
+    "description": "Copies the source directory, src_dir_name, to the destination directory, dst_dir_name. The copy operation is recursive, so it copies subdirectories. Returns 0 for success and 1 for failure. If the source directory does not exist, an error occurs. If the destination directory does not exist, mysqltest creates it before copying the source directory.",
+    "demos": ["--force-cpdir testdir testdir2", "--force-rmdir testdir"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "horizontal_results",
+    "syntax": "horizontal_results",
+    "description": "Set the default query result display format to horizontal. Initially, the default is to display results horizontally.",
+    "demos": ["--horizontal_results"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "if",
+    "syntax": "if (expr)",
+    "description": "Begin an if block, which continues until an end or } line. mysqltest executes the block if the expression is non-zero. There is no provision for else with if. See mysqltest Flow Control Constructs, for further information about if statements.",
+    "demos": [
+      "let $counter= 0;\nif ($counter)\n{\n  echo Counter is not 0;\n}\n\nif (!$counter)\n{\n  echo Counter is 0;\n}"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "inc",
+    "syntax": "inc $var_name",
+    "description": "Increment a numeric variable. If the variable does not have a numeric value, the result is undefined.",
+    "demos": ["--inc $i;\ninc $3;"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "let",
+    "syntax": "let $var= convert_error(error)",
+    "description": "This is not a command as such but rather a function that can be used in let statements. If the argument is a number, it returns the name of the corresponding error, or <Unknown> if no such error exists. If the argument is an error name, it returns the corresponding number, or fails if the error name is unknown. If the argument is 0 or an empty string, it returns 0. The function can also take a variable as argument.",
+    "demos": [
+      "let $errvar1=convert_error(ER_UNKNOWN_ERROR);\nlet $errvar2=convert_error(1450);\nlet $errvar3=convert_error($errvar1);",
+      "--let $1= 0\nlet $count= 10;",
+      "let $q= `SELECT VERSION()`;",
+      "let $mysqltest_variable= foo;\nlet ENV_VARIABLE= bar;",
+      "print $ENV{'ENV_VARIABLE'};"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "list_files",
+    "syntax": "list_files dir_name [pattern]",
+    "description": "list_files lists the files in the named directory. If a pattern is given, lists only file(s) matching the pattern, which may contain wild cards.",
+    "demos": ["--list_files $MYSQLD_DATADIR/test t1*"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "list_files_append_file",
+    "syntax": "list_files_append_file file_name dir_name [pattern]",
+    "description": "list_files_append_file works like list_files, but rather than outputting the file list, it is appended to the file named in the first argument. If the file does not exist, it is created.",
+    "demos": [
+      "--list_files_append_file $MYSQL_TMP_DIR/filelist $MYSQL_TMP_DIR/testdir *.txt;"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "list_files_write_file",
+    "syntax": "list_files_write_file file_name dir_name [pattern]",
+    "description": "list_files_write_file works like list_files_append_file, but creates a new file to write the file list to. If the file already exists, it will be replaced.",
+    "demos": [
+      "--list_files_write_file $MYSQL_TMP_DIR/filelist $MYSQL_TMP_DIR/testdir *.txt;"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "lowercase_result",
+    "syntax": "lowercase_result",
+    "description": "Output from the following SQL statement will be converted to lowercase. This is sometimes needed to ensure consistent result across different platforms. If this is combined with one of the replace commands or with sorted_result, both will take effect on the output, with conversion to lowercase being applied first.",
+    "demos": ["--lowercase_result"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "mkdir",
+    "syntax": "mkdir dir_name",
+    "description": "Create a directory named dir_name. Returns 0 for success and 1 for failure.",
+    "demos": ["--mkdir testdir"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "move_file",
+    "syntax": "move_file from_name to_name [retry]",
+    "description": "move_file renames from_name to to_name. The file name arguments are subject to variable substitution, but must evaluate to a literal file name, not a file name pattern. move_file can also take an optional argument retry. If the command fails due to an environmental issue, the command can be retried for a retry number of times. Each retry happens after an interval of one second.",
+    "demos": [
+      "move_file $MYSQL_TMP_DIR/data01 $MYSQL_TMP_DIR/test.out;\nmove_file $MYSQL_TMP_DIR/data01 $MYSQL_TMP_DIR/test.out 5;"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "output",
+    "syntax": "output file_name",
+    "description": "Direct output from the next SQL statement to the named file rather than to the test output. If the file already exists, it will be overwritten. Only the next SQL statement will have its output redirected.",
+    "demos": ["output $MYSQL_TMP_DIR/out-file"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "partially_sorted_result",
+    "syntax": "partially_sorted_result start_column",
+    "description": "Similarly to sorted_result, but assumes that the first start_column columns are already sorted, sorting only on the remaining ones. This is useful if you wish to verify a partial ordering property, e.g. that SELECT a,b,c ORDER BY a. In this case, you could use partially_sorted_result 1 to sort only on b and c, giving deterministic results without masking bugs where sorting on a column would not work correctly. sorted_result is functionally equal to partially_sorted_result 0.",
+    "demos": [],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "perl",
+    "syntax": "perl [terminator]",
+    "description": "Use Perl to execute the following lines of the test file. The lines end when a line containing the terminator is encountered. The default terminator is EOF, but a different terminator can be provided.",
+    "demos": [
+      "perl;\nprint \"This is a test\\n\";\nEOF",
+      "perl END_OF_FILE;\nprint \"This is another test\\n\";\nEND_OF_FILE"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "ping",
+    "syntax": "ping",
+    "description": "Ping the server. This executes the mysql_ping() C API function. The function result is discarded. The effect is that if the connection has dropped and reconnect is enabled, pinging the server causes a reconnect.",
+    "demos": [],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "query",
+    "syntax": "query [statement]",
+    "description": "Send the statement to the server to be executed. The query command can be used to force mysqltest to send a statement to the server even if it begins with a keyword that is a mysqltest command.",
+    "demos": [],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "query_get_value",
+    "syntax": "query_get_value(query, col_name, row_num)",
+    "description": "The query_get_value() function can be used only on the right hand side of a variable assigment in a let statement. query_get_value() enables retrieval of a value from a query result set produced by a statement such as SELECT or SHOW. The first argument indicates the query to execute. The second and third arguments indicate the column name and row number that specify which value to extract from the result set. The column name is case sensitive. Row numbers begin with 1. The arguments can be given literally or supplied using variables. Suppose that the test file contains this input: The result will be: If the query fails, an error message occurs and the test fails.",
+    "demos": [
+      "CREATE TABLE t1(a INT, b VARCHAR(255), c DATETIME);\nSHOW COLUMNS FROM t1;\nlet $value= query_get_value(SHOW COLUMNS FROM t1, Type, 1);\necho $value;",
+      "CREATE TABLE t1(a INT, b VARCHAR(255), c DATETIME);\nSHOW COLUMNS FROM t1;\nField   Type    Null    Key     Default Extra\na       int(11) YES             NULL\nb       varchar(255)    YES             NULL\nc       datetime        YES             NULL\nint(11)"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "query_horizontal",
+    "syntax": "query_horizontal statement",
+    "description": "Execute the statement and display its result horizontally.",
+    "demos": ["query_horizontal SELECT PI();"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "query_vertical",
+    "syntax": "query_vertical statement",
+    "description": "Execute the statement and display its result vertically.",
+    "demos": ["query_vertical SELECT PI();"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "reap",
+    "syntax": "reap",
+    "description": "Receive the result of the statement sent with the send command within the current session. You should not use reap unless a statement has been sent with send, and you should not use send again if there is an outstanding send that has not been processed with reap.",
+    "demos": [],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "remove_file",
+    "syntax": "remove_file file_name [retry]",
+    "description": "remove_file removes the file. It fails with an error if the file does not exist. The file name argument is subject to variable substitution, but must evaluate to a literal file name, not a file name pattern. remove_file also takes an optional argument retry. If the command fails due to an environmental issue, the command can be retried for a retry number of times. Each retry happens after an interval of one second.",
+    "demos": [
+      "remove_file $MYSQL_TMP_DIR/data01;\nremove_file $MYSQL_TMP_DIR/data01 5"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "remove_files_wildcard",
+    "syntax": "remove_files_wildcard dir_name pattern [retry]",
+    "description": "Remove all files in the named directory that match the pattern. Removal does not apply to directories matching the pattern or matching files in subdirectories. Patterns can use ? to represent any single character, or * for any sequence of 0 or more characters. The . character is treated like any other. The pattern may not include /. If all the files need to be removed, the * wildcard can be used. remove_files_wildcard can also take an optional argument retry. If the command fails due to an environmental issue, the command can be retried for a retry number of times. Each retry happens after an interval of one second.",
+    "demos": [
+      "remove_files_wildcard $MYSQL_TMP_DIR file*.txt;\nremove_files_wildcard $MYSQL_TMP_DIR file*.txt 5;"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "replace_column",
+    "syntax": "replace_column col_num value [col_num value] ...",
+    "description": "Replace strings in the output from the next statement. The value in col_num is replaced by the corresponding value. There can be more than one col_num/value pair. Column numbers start with 1. A replacement value can be double-quoted. (Use “\"” to specify a double quote within a replacement string.) Variables can be used in a replacement value if it is not double-quoted. If mixed replace_xxx commands are given, only the final one applies.",
+    "demos": ["--replace_column 9 #\nreplace_column 1 b 2 d;"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "replace_numeric_round",
+    "syntax": "replace_numeric_round precision",
+    "description": "Rounds off floating point numbers. precision is the number of digits after the decimal point to which the result will be rounded off to. It can only be a number between 0 and 16. If the precision is 0, then the value is rounded off to the nearest whole number. Trailing zeroes after the decimal point are removed from the numbers. Numbers which are greater than 1e10 or lesser than -1e10 are represented using the exponential notation after they are rounded off.",
+    "demos": [
+      "--replace_numeric_round 6\nSELECT 12379.79459775333;\n12379.794598\n\nreplace_numeric_round 0;\nSELECT 876.87302;\n877"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "replace_regex",
+    "syntax": "replace_regex /pattern/replacement/[i] ...",
+    "description": "In the output from the next statement, find strings within columns of the result set that match pattern (a regular expression) and replace them with replacement. Each instance of a string in a column that matches the pattern is replaced. Matching is case sensitive by default. Specify the optional i modifier to cause matching to be case insensitive. The syntax for allowable patterns is same as the std::ECMAScript syntax. The pattern can contain parentheses to mark substrings matched by parts of the pattern. These substrings can be referenced in the replacement string: An instance of N in the replacement string causes insertion of the N-th substring matched by the pattern. For example, the following command matches strawberry and replaces it with raspberry and strawberry: Multiple pattern/replacement pairs may be given. The following command replaces instances of A with C (the first pattern replaces A with B, the second replaces B with C): If a given pattern is not found, no error occurs and the input is unchanged.",
+    "demos": [
+      "--replace_regex /(strawberry)/raspberry and \\1/",
+      "--replace_regex /A/B/ /B/C/"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "replace_result",
+    "syntax": "replace_result from_val to_val [from_val to_val] ...",
+    "description": "Replace strings in the result. Each occurrence of from_val is replaced by the corresponding to_val. There can be more than from_val/to_val pair. Arguments can be quoted with single quotation marks or double quotation marks. Variable references within the arguments are expanded before replacement occurs. Values are matched literally. To use patterns, use the replace_regex command.",
+    "demos": [
+      "--replace_result 1024 MAX_KEY_LENGTH 3072 MAX_KEY_LENGTH\nreplace_result $MASTER_MYPORT SOURCE_PORT;"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "reset_connection",
+    "syntax": "reset_connection",
+    "description": "Reset the connection state by calling mysql_reset_connection().",
+    "demos": [],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "result_format",
+    "syntax": "result_format version",
+    "description": "Set the format to the specified version, which is either 1 for the current, default behavior, or to 2 which is an extended alternative format. The setting is in effect until it is changed or until the end of the test. In format version 2, empty lines and indentation in the test file are preserveded in the result. Also, comments indicated by a double ## are copied verbatim to the result. Comments using a single # are not copied. Format version 2 makes it easier for humans to read the result output, but at the cost of somewhat larger files due to the white space and comments.",
+    "demos": ["--result_format 2"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "rmdir",
+    "syntax": "rmdir dir_name",
+    "description": "Remove a directory named dir_name. Returns 0 for success and 1 for failure. rmdir fails if the directory to be removed contains any files or directories. To remove the directory as well as its contents, if any, use force-rmdir.",
+    "demos": ["--rmdir testdir"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "save_master_pos",
+    "syntax": "save_master_pos",
+    "description": "For a master replication server, save the current binary log file name and position. These values can be used for subsequent sync_with_master or sync_slave_with_master commands.",
+    "demos": [],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "send",
+    "syntax": "send [statement]",
+    "description": "Send a statement to the server but do not wait for the result. The result must be received with the reap command. You cannot execute another SQL statement on the same connection between send and reap. If statement is omitted, the send command applies to the next statement executed. This means that send can be used on a line by itself before a statement. Thus, this command: Is equivalent to these commands:",
+    "demos": ["send SELECT 1;", "send;\nSELECT 1;"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "send_eval",
+    "syntax": "send_eval [statement]",
+    "description": "Evaluate the command, then send it to the server. This is a combination of the send and eval commands, giving the functionality of both. After variable replacement has been done, it behaves like the send command. If statement is omitted, the send_eval command applies to the next statement executed. This means that send_eval can be used on a line by itself before a statement. Thus, this command: Is equivalent to these commands:",
+    "demos": ["--send_eval $my_stmt", "--send_eval\n$my_stmt;"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "send_quit",
+    "syntax": "send_quit connection",
+    "description": "Sends a COM_QUIT command to the server on the named connection.",
+    "demos": ["send_quit con;"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "send_shutdown",
+    "syntax": "send_shutdown",
+    "description": "Sends a shutdown command to the server but does not wait for it to complete the shutdown. Test execution proceeds as soon as the shutdown command is sent.",
+    "demos": [],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "shutdown_server",
+    "syntax": "shutdown_server [timeout]",
+    "description": "Stops the server. This command waits for the server to shut down by monitoring its process ID (PID) file. If the server's process ID file is not gone after timeout seconds, the process will be killed. If timeout is omitted, the default is 60 seconds.",
+    "demos": ["shutdown_server;\nshutdown_server 30;"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "skip",
+    "syntax": "skip [message]",
+    "description": "Skips the rest of the test file after printing the given message as the reason. This can be used after checking a condition that must be satisfied, as a way of performing an exit that displays a reason. References to variables within the message are replaced with the corresponding values. Suppose that the test file mytest.test has these contents: Executing mysqltest -x mytest.test yields these results: If the test is run from mysql-test-run.pl, you will instead see the test result as [ skipped ] followed by the message.",
+    "demos": [
+      "let $var= 0;\nif (!$var)\n{\n  skip value of \\$var is '$var', skipping test;\n}\necho This command is never reached;",
+      "The test './mytest' is not supported by this installation\nDetected in file ./mytest at line 4\nreason: value of $var is '0', skipping test",
+      "main.mytest          [ skipped ]  value of $var is '0', skipping test"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "sleep",
+    "syntax": "sleep num",
+    "description": "Sleep num seconds. num need not be a whole number and can have a fractional part as well i.e., the command supports sleeping for intervals shorter than 1 second. Try not to use sleep command more than necessary. The more of them there are, the slower the test suite becomes.",
+    "demos": ["--sleep 10\nsleep 0.5;"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "sorted_result",
+    "syntax": "sorted_result",
+    "description": "Sort the output from the next statement if it produces a result set. sorted_result is applied just before displaying the result, after any other result modifiers that might have been specified, such as replace_result or replace_column. If the next statement produces no result set, sorted_result has no effect because there is nothing to sort. sorted_result sorts the entire result of the next query. If this involves constructs such as UNION, stored procedures, or multi-statements, the output will be in a fixed order, but all the results will be sorted together and might appear somewhat strange. The purpose of the sorted_result command is to produce output with a deterministic order for a given set of result rows. It is possible to use ORDER BY to sort query results, but that can sometimes present its own problems. For example, if the optimizer is being investigated for some bug, ORDER BY might order the result but return an incorrect set of rows. sorted_result can be used to produce sorted output even in the absence of ORDER BY. sorted_result is useful for eliminating differences between test runs that may otherwise be difficult to compensate for. Results without ORDER BY are not guaranteed to be returned in any given order, so the result for a given query might differ between test runs. For example, the order might vary between different server versions, so a result file created by one server might fail when compared to the result created by another server. The same is true for different storage engines. sorted_result eliminates these order differences by producing a deterministic row order. Other ways to eliminate differences from results without use of sorted_result include: The use of aggregate functions or ORDER BY may also have the advantage of exposing other bugs by introducing additional stress on the server. The choice of whether to use sorted_result or ORDER BY (or perhaps both) may be dictated by whether you are trying to expose bugs, or avoid having them affect results. This means that care should be taken with sorted_result because it has the potential of hiding server bugs that result in true problems with result order.",
+    "demos": [
+      "sorted_result;\nSELECT 2 AS \"my_col\" UNION SELECT 1;\nlet $my_stmt=SELECT 2 AS \"my_col\" UNION SELECT 1;\n--sorted_result\neval $my_stmt;\n--sorted_result\n--replace_column 1 #\nSELECT '1' AS \"my_col1\",2 AS \"my_col2\"\nUNION\nSELECT '2',1;"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "source",
+    "syntax": "source file_name",
+    "description": "Read test input from the named file. If you find that several test case files contain a common section of commands (for example, statements that create a standard set of tables), you can put those commands in another file and those test cases that need the file can include it by means of a source file_name command. This enables you to write the code just once rather than in multiple test cases. Normally, the file name in the source command is relative to the mysql-test directory because mysqltest usually is invoked in that directory. A sourced file can use source to read other files, but take care to avoid a loop. The maximum nesting level is 16. The file name can include variable references. Variables are expanded including any quotation marks in the values, so normally the values should not include quotation marks. Suppose that /tmp/junk contains this line: The following example shows one way in which variable references could be used to specify the file name:",
+    "demos": [
+      "--source include/have_csv.inc\nsource include/varchar.inc;",
+      "SELECT 'I am a query';",
+      "let $dir= /tmp;\nlet $file= junk;\nsource $dir/$file;"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "start_timer",
+    "syntax": "start_timer",
+    "description": "Restart the timer, overriding any timer start that occurred earlier. By default, the timer starts when mysqltest begins execution.",
+    "demos": [],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "sync_slave_with_master",
+    "syntax": "sync_slave_with_master [connection_name]",
+    "description": "Executing this command is equivalent to executing the following commands: If connection_name is not specified, the connection named slave is used. The effect is to save the replication coordinates (binary log file name and position) for the server on the current connection (which is assumed to be a master replication server), and then switch to a slave server and wait until it catches up with the saved coordinates. Note that this command implicitly changes the current connection. A variable can be used to specify the connection_name value.",
+    "demos": [
+      "save_master_pos;\nconnection connection_name;\nsync_with_master 0;"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "sync_with_master",
+    "syntax": "sync_with_master offset",
+    "description": "For a slave replication server, wait until it has caught up with the master. The position to synchronize to is the position saved by the most recent save_master_pos command plus offset. To use this command, save_master_pos must have been executed at some point earlier in the test case to cause mysqltest to save the master's replication coordinates.",
+    "demos": [],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "vertical_results",
+    "syntax": "vertical_results",
+    "description": "Set the default query result display format to vertical. Initially, the default is to display results horizontally.",
+    "demos": ["--vertical_results"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "wait_for_slave_to_stop",
+    "syntax": "wait_for_slave_to_stop",
+    "description": "Poll the current connection, which is assumed to be a connection to a slave replication server, by executing SHOW STATUS LIKE 'Slave_running' statements until the result is OFF. For information about alternative means of slave server control, see Writing Replication Tests.",
+    "demos": [],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "while",
+    "syntax": "while (expr)",
+    "description": "Begin a while loop block, which continues until an end line. mysqltest executes the block repeatedly as long as the expression is true (non-zero). See mysqltest Flow Control Constructs, for further information about while statements. Make sure that the loop includes some exit condition that eventually occurs. This can be done by writing expr so that it becomes false at some point.",
+    "demos": ["let $i=5;\nwhile ($i)\n{\n  echo $i;\n  dec $i;\n}"],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  },
+  {
+    "name": "write_file",
+    "syntax": "write_file file_name [terminator]",
+    "description": "Write the following lines of the test file to the given file, until a line containing the terminator is encountered. The default terminator is EOF, but a different terminator can be provided. The file name argument is subject to variable substitution. An error occurs if the file already exists.",
+    "demos": [
+      "write_file $MYSQL_TMP_DIR/data01;\nline one for the file\nline two for the file\nEOF",
+      "write_file $MYSQL_TMP_DIR/data02 END_OF_FILE;\nline one for the file\nline two for the file\nEND_OF_FILE"
+    ],
+    "doc_page": "PAGE_MYSQL_TEST_COMMANDS"
+  }
+]

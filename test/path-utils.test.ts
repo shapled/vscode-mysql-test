@@ -48,6 +48,22 @@ describe("findMysqlTestRoot", () => {
     );
     expect(result).toBeUndefined();
   });
+
+  it("should find root from Windows path", () => {
+    const result = findMysqlTestRoot(
+      "C:\\project\\mysql-test\\t\\alias.test"
+    );
+    expect(result).toContain("mysql-test");
+    expect(result).toContain("project");
+  });
+
+  it("should find root from Windows UNC path", () => {
+    const result = findMysqlTestRoot(
+      "\\\\wsl$\\Ubuntu\\home\\user\\mysql-test\\t\\alias.test"
+    );
+    expect(result).toContain("mysql-test");
+    expect(result).toContain("wsl$");
+  });
 });
 
 describe("pairTestResultPath", () => {
@@ -90,6 +106,26 @@ describe("pairTestResultPath", () => {
     expect(
       pairTestResultPath("/project/mysql-test/include/alias.inc")
     ).toBeUndefined();
+  });
+
+  it("should pair Windows path .test to .result", () => {
+    expect(
+      pairTestResultPath("C:\\project\\mysql-test\\t\\alias.test")
+    ).toBe("C:/project/mysql-test/r/alias.result");
+  });
+
+  it("should pair Windows path .result to .test", () => {
+    expect(
+      pairTestResultPath("C:\\project\\mysql-test\\r\\alias.result")
+    ).toBe("C:/project/mysql-test/t/alias.test");
+  });
+
+  it("should pair Windows nested suite .test to .result", () => {
+    expect(
+      pairTestResultPath(
+        "C:\\project\\mysql-test\\suite\\innodb\\t\\wl6742.test"
+      )
+    ).toBe("C:/project/mysql-test/suite/innodb/r/wl6742.result");
   });
 });
 
@@ -166,6 +202,15 @@ describe("pairSuffixFileToTest", () => {
         "cnf"
       )
     ).toBeUndefined();
+  });
+
+  it("should pair Windows -master.opt to .test (strip suffix)", () => {
+    expect(
+      pairSuffixFileToTest(
+        "C:\\project\\mysql-test\\t\\auth_rpl-master.opt",
+        "opt"
+      )
+    ).toBe("C:/project/mysql-test/t/auth_rpl.test");
   });
 });
 

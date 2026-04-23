@@ -1,6 +1,6 @@
 {
   "name": "mysql-test",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "displayName": "MySQL Test Run",
   "description": "Syntax highlighting and navigation for MySQL test files (.test, .result, .opt, .cnf)",
   "publisher": "shapled",

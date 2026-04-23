@@ -38,6 +38,11 @@
             "2": { "name": "punctuation.definition.directive.mysql-test" },
             "3": { "name": "entity.name.function.directive.mysql-test" }
           }
+        },
+        {
+          "comment": "MTR commands without -- prefix (semicolon-terminated)",
+          "name": "entity.name.function.directive.mysql-test",
+          "match": "^\\s*(append_file|assert|cat_file|change_user|character_set|chmod|connect|connection|copy_file|copy_files_wildcard|dec|delimiter|die|diff_files|dirty_close|disable_abort_on_error|disable_async_client|disable_connect_log|disable_info|disable_metadata|disable_ps_protocol|disable_query_log|disable_result_log|disable_rpl_parse|disable_session_track_info|disable_testcase|disable_warnings|disconnect|echo|enable_abort_on_error|enable_async_client|enable_connect_log|enable_info|enable_metadata|enable_ps_protocol|enable_query_log|enable_result_log|enable_rpl_parse|enable_session_track_info|enable_warnings|end|end_timer|error|eval|exec|exec_in_background|execw|exit|expr|file_exists|force|horizontal_results|if|inc|let|list_files|list_files_append_file|list_files_write_file|lowercase_result|mkdir|move_file|output|partially_sorted_result|perl|ping|query|query_get_value|query_horizontal|query_vertical|reap|remove_file|remove_files_wildcard|replace_column|replace_numeric_round|replace_regex|replace_result|reset_connection|result_format|rmdir|save_master_pos|send|send_eval|send_quit|send_shutdown|shutdown_server|skip|sleep|sorted_result|source|start_timer|sync_slave_with_master|sync_with_master|vertical_results|wait_for_slave_to_stop|while|write_file)\\b"
         }
       ]
     },
