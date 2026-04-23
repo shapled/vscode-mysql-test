@@ -1,0 +1,168 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "MySQL Test Case",
+  "scopeName": "source.mysql-test",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#mtr-directives" },
+    { "include": "#mtr-control-flow" },
+    { "include": "#mtr-variables" },
+    { "include": "#perl-block" },
+    { "include": "#sql" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.mysql-test",
+          "match": "^\\s*#.*$"
+        }
+      ]
+    },
+    "mtr-directives": {
+      "patterns": [
+        {
+          "name": "keyword.control.mtr-directive.mysql-test",
+          "match": "^(\\s*)(--)\\s*(disable_query_log|enable_query_log|disable_result_log|enable_result_log|disable_warnings|enable_warnings|echo|error|sorted_result|replace_result|replace_regex|replace_column|eval|let|source|include|exec|die|skip|sleep|vertical|horizontal|delimiter|ps-protocol|cursor-protocol|sp-protocol|view-protocol|binlog|query_vertical|abort_on_error|prompt|real_sleep|inc|dec|list_files|list_files_append|remove_files|remove_files_wildcard|copy_files|mkdir|write_file|append_file|chmod|cat_file|move_file|send_shutdown|send_kill|wait_until_connected_again|wait_until_disconnected|wait_until_count_sessions|assert|assert_file_exists|assert_file_not_exists|connection|disconnect|reconnect|connection_default|debug|require|require_manager_version|skip_test|not_parallel|sorted_result|sorted_result_format|accept_only_local_connections|restart|restart_all|shutdown_server|bootstrap|group_replication_wait|metadata_lock_info|metadata_lock_ignore|explain_format|innodb_page_size|use_stat_tables|stat_tables|force_restart|nodebug|debug_sync|user|eval|query|send|reap|send_eval|reap_eval|enable_metadata|disable_metadata|long_query_time|result_format|testcase_timeout|pager|nopager|enable_aborted_connect|disable_aborted_connect|output|report|error_handler|begin|end|save_master_pos|sync_slave_with_master|sync_with_master|connection_master|connection_slave|slave_stopped|start_slave|stop_slave|reset_master|reset_slave|load_data|remove_file|copy_file_init|copy_file_consume|perl|exec)|(?=\\s|$)",
+          "captures": {
+            "1": { "name": "punctuation.whitespace.leading.mysql-test" },
+            "2": { "name": "punctuation.definition.directive.mysql-test" },
+            "3": { "name": "entity.name.function.directive.mysql-test" }
+          }
+        },
+        {
+          "name": "keyword.control.mtr-directive.mysql-test",
+          "match": "^(\\s*)(--)\\s*([a-zA-Z_][a-zA-Z0-9_]*)(?=\\s|$)",
+          "captures": {
+            "1": { "name": "punctuation.whitespace.leading.mysql-test" },
+            "2": { "name": "punctuation.definition.directive.mysql-test" },
+            "3": { "name": "entity.name.function.directive.mysql-test" }
+          }
+        }
+      ]
+    },
+    "mtr-control-flow": {
+      "patterns": [
+        {
+          "name": "keyword.control.conditional.mysql-test",
+          "match": "^\\s*(if|then|else|end\\s+if)\\b"
+        },
+        {
+          "name": "punctuation.section.block.mysql-test",
+          "match": "[{}]"
+        }
+      ]
+    },
+    "mtr-variables": {
+      "patterns": [
+        {
+          "name": "variable.other.mtr.mysql-test",
+          "match": "\\$[A-Za-z_][A-Za-z0-9_]*"
+        }
+      ]
+    },
+    "perl-block": {
+      "patterns": [
+        {
+          "name": "support.function.perl-block.mysql-test",
+          "begin": "^(\\s*)(--)\\s*perl",
+          "end": "^(\\s*)(--)\\s*EOF",
+          "beginCaptures": {
+            "1": { "name": "punctuation.whitespace.leading.mysql-test" },
+            "2": { "name": "entity.name.function.directive.mysql-test" }
+          },
+          "endCaptures": {
+            "1": { "name": "punctuation.whitespace.leading.mysql-test" },
+            "2": { "name": "entity.name.function.directive.mysql-test" }
+          },
+          "contentName": "source.perl"
+        }
+      ]
+    },
+    "sql": {
+      "patterns": [
+        {
+          "name": "keyword.other.sql.ddl.mysql-test",
+          "match": "(?i)\\b(CREATE|ALTER|DROP|RENAME|TRUNCATE|TABLE|DATABASE|SCHEMA|INDEX|VIEW|TRIGGER|PROCEDURE|FUNCTION|EVENT|TEMPORARY|IF\\s+NOT\\s+EXISTS|IF\\s+EXISTS)\\b"
+        },
+        {
+          "name": "keyword.other.sql.dml.mysql-test",
+          "match": "(?i)\\b(SELECT|INSERT|INTO|VALUES|UPDATE|SET|DELETE|REPLACE|MERGE|CALL|EXECUTE|FROM|WHERE|JOIN|INNER|OUTER|LEFT|RIGHT|FULL|CROSS|ON|USING|GROUP\\s+BY|HAVING|ORDER\\s+BY|LIMIT|OFFSET|UNION|ALL|DISTINCT|INTERSECT|EXCEPT|AS|AND|OR|NOT|IN|BETWEEN|LIKE|IS|NULL|EXISTS|CASE|WHEN|THEN|ELSE|END|WITH|RECURSIVE)\\b"
+        },
+        {
+          "name": "keyword.other.sql.mysql-test",
+          "match": "(?i)\\b(SHOW|DESCRIBE|EXPLAIN|USE|START|BEGIN|COMMIT|ROLLBACK|SAVEPOINT|LOCK|UNLOCK|GRANT|REVOKE|PREPARE|DEALLOCATE|DECLARE|HANDLER|OPEN|CLOSE|FETCH|RETURN|LEAVE|ITERATE|LOOP|REPEAT|WHILE|CURSOR|FOR|CONTINUE\\s+HANDLER|EXIT\\s+HANDLER|SIGNAL|RESIGNAL|GET\\s+DIAGNOSTICS)\\b"
+        },
+        {
+          "name": "keyword.other.sql.admin.mysql-test",
+          "match": "(?i)\\b(ANALYZE|CHECK|OPTIMIZE|REPAIR|BACKUP|RESTORE|INSTALL|UNINSTALL|SHUTDOWN|RESTART|KILL|LOAD|DATA|INFILE|OUTFILE|DUMPFILE|FLUSH|RESET|PURGE|MASTER|SLAVE|REPLICA|SOURCE|REPLICATION|CHANGE|STOP|START|CONFIG|XA)\\b"
+        },
+        {
+          "name": "keyword.other.sql.types.mysql-test",
+          "match": "(?i)\\b(INT|INTEGER|TINYINT|SMALLINT|MEDIUMINT|BIGINT|FLOAT|DOUBLE|DECIMAL|NUMERIC|CHAR|VARCHAR|BINARY|VARBINARY|TINYBLOB|BLOB|MEDIUMBLOB|LONGBLOB|TINYTEXT|TEXT|MEDIUMTEXT|LONGTEXT|DATE|TIME|DATETIME|TIMESTAMP|YEAR|ENUM|SET|BOOL|BOOLEAN|SERIAL|FIXED|GEOMETRY|POINT|LINESTRING|POLYGON|MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|GEOMETRYCOLLECTION|JSON|VECTOR)\\b"
+        },
+        {
+          "name": "keyword.other.sql.constraints.mysql-test",
+          "match": "(?i)\\b(PRIMARY|KEY|UNIQUE|FOREIGN|REFERENCES|CONSTRAINT|CHECK|DEFAULT|AUTO_INCREMENT|UNSIGNED|ZEROFILL|ON\\s+DELETE|ON\\s+UPDATE|CASCADE|RESTRICT|SET\\s+NULL|NO\\s+ACTION)\\b"
+        },
+        {
+          "name": "keyword.other.sql.functions.mysql-test",
+          "match": "(?i)\\b(AVG|COUNT|MAX|MIN|SUM|GROUP_CONCAT|CONCAT|LENGTH|SUBSTRING|TRIM|UPPER|LOWER|REPLACE|REVERSE|LEFT|RIGHT|LPAD|RPAD|INSERT|LOCATE|INSTR|FIELD|FIND_IN_SET|FORMAT|CONV|HEX|UNHEX|CAST|CONVERT|COALESCE|IFNULL|NULLIF|IF|CASE|GREATEST|LEAST|ROW_COUNT|FOUND_ROWS|LAST_INSERT_ID|CONNECTION_ID|VERSION|DATABASE|USER|CURRENT_USER|CURRENT_DATE|CURRENT_TIME|CURRENT_TIMESTAMP|NOW|CURDATE|CURTIME|DATE|DATE_ADD|DATE_SUB|DATEDIFF|DATE_FORMAT|EXTRACT|YEAR|MONTH|DAY|HOUR|MINUTE|SECOND|MICROSECOND|QUARTER|WEEK|YEARWEEK|TIMESTAMPDIFF|TIMESTAMPADD|UNIX_TIMESTAMP|FROM_UNIXTIME|SEC_TO_TIME|TIME_TO_SEC|STR_TO_DATE|MD5|SHA|SHA1|SHA2|PASSWORD|ENCRYPT|DECODE|ENCODE|AES_ENCRYPT|AES_DECRYPT|COMPRESS|UNCOMPRESS|RANDOM_BYTES|UUID|UUID_SHORT|SLEEP|BENCHMARK|GET_LOCK|RELEASE_LOCK|IS_FREE_LOCK|IS_USED_LOCK|INET_ATON|INET_NTOA|INET6_ATON|INET6_NTOA|JSON_EXTRACT|JSON_CONTAINS|JSON_ARRAY|JSON_OBJECT|JSON_TYPE|JSON_VALID|JSON_LENGTH|JSON_DEPTH|JSON_KEYS|JSON_INSERT|JSON_REPLACE|JSON_REMOVE|JSON_SET|JSON_UNQUOTE|JSON_SEARCH|JSON_ARRAY_APPEND|JSON_ARRAY_INSERT|JSON_MERGE_PATCH|JSON_MERGE_PRESERVE|REGEXP|RLIKE|NOT\\s+REGEXP|SOUNDS\\s+LIKE|MATCH|AGAINST|FULLTEXT|SPATIAL|ELT|FIELD)\\b"
+        },
+        {
+          "name": "keyword.other.sql.variables.mysql-test",
+          "match": "(?i)\\b(GLOBAL|SESSION|LOCAL|@@|@)\\b"
+        },
+        {
+          "name": "constant.language.sql.mysql-test",
+          "match": "(?i)\\b(TRUE|FALSE|UNKNOWN|NULL)\\b"
+        },
+        {
+          "name": "support.function.mysql-test",
+          "match": "(?i)\\b(enable_async_client|disable_async_client)\\b"
+        },
+        {
+          "name": "string.quoted.single.sql.mysql-test",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.sql.mysql-test",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.double.sql.mysql-test",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.sql.mysql-test",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.other.backtick.sql.mysql-test",
+          "begin": "`",
+          "end": "`",
+          "patterns": [
+            {
+              "name": "constant.character.escape.sql.mysql-test",
+              "match": "``"
+            }
+          ]
+        },
+        {
+          "name": "constant.numeric.sql.mysql-test",
+          "match": "\\b(\\d+\\.?\\d*([eE][+-]?\\d+)?)\\b"
+        },
+        {
+          "name": "punctuation.terminator.statement.sql.mysql-test",
+          "match": ";"
+        }
+      ]
+    }
+  }
+}

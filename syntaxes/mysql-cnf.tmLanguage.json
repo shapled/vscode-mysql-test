@@ -1,0 +1,78 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "MySQL Test Config",
+  "scopeName": "source.ini.mysql-cnf",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#include-directive" },
+    { "include": "#section" },
+    { "include": "#key-value" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.mysql-cnf",
+          "match": "^\\s*#.*$"
+        },
+        {
+          "name": "comment.line.semicolon.mysql-cnf",
+          "match": "^\\s*;.*$"
+        }
+      ]
+    },
+    "include-directive": {
+      "patterns": [
+        {
+          "name": "keyword.control.include.mysql-cnf",
+          "match": "^(!include)\\s+(.+)$",
+          "captures": {
+            "1": { "name": "keyword.control.include.mysql-cnf" },
+            "2": { "name": "string.unquoted.path.mysql-cnf" }
+          }
+        },
+        {
+          "name": "keyword.control.include.mysql-cnf",
+          "match": "^(!include\\s+dir)\\s+(.+)$",
+          "captures": {
+            "1": { "name": "keyword.control.include.mysql-cnf" },
+            "2": { "name": "string.unquoted.path.mysql-cnf" }
+          }
+        },
+        {
+          "name": "keyword.control.include.mysql-cnf",
+          "match": "^(!includedir)\\s+(.+)$",
+          "captures": {
+            "1": { "name": "keyword.control.include.mysql-cnf" },
+            "2": { "name": "string.unquoted.path.mysql-cnf" }
+          }
+        }
+      ]
+    },
+    "section": {
+      "patterns": [
+        {
+          "name": "entity.name.section.group-title.mysql-cnf",
+          "match": "^\\s*(\\[)([^\\]]+)(\\])",
+          "captures": {
+            "1": { "name": "punctuation.section.bracket.begin.mysql-cnf" },
+            "2": { "name": "entity.name.section.mysql-cnf" },
+            "3": { "name": "punctuation.section.bracket.end.mysql-cnf" }
+          }
+        }
+      ]
+    },
+    "key-value": {
+      "patterns": [
+        {
+          "name": "support.variable.mysql-cnf",
+          "match": "^\\s*([a-zA-Z_][a-zA-Z0-9_-]*)\\s*=\\s*(.*)$",
+          "captures": {
+            "1": { "name": "entity.name.tag.key.mysql-cnf" },
+            "2": { "name": "string.unquoted.value.mysql-cnf" }
+          }
+        }
+      ]
+    }
+  }
+}

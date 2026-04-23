@@ -1,0 +1,146 @@
+{
+  "name": "mysql-test",
+  "version": "1.0.1",
+  "displayName": "MySQL Test Run",
+  "description": "Syntax highlighting and navigation for MySQL test files (.test, .result, .opt, .cnf)",
+  "publisher": "shapled",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shapled/vscode-mysql-test"
+  },
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.116.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "mysql",
+    "mysql test",
+    "mtr",
+    "mysql-test",
+    "mysql-test-run",
+    "test",
+    "syntax highlighting",
+    "navigation"
+  ],
+  "activationEvents": [
+    "onLanguage:mysql-test",
+    "onLanguage:mysql-result",
+    "onLanguage:mysql-opt",
+    "onLanguage:mysql-cnf"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "mysql-test",
+        "aliases": [
+          "MySQL Test Case"
+        ],
+        "extensions": [
+          ".test",
+          ".inc"
+        ],
+        "filenamePatterns": [
+          "**/mysql-test/**/t/**/*.test",
+          "**/mysql-test/**/r/**/*.test",
+          "**/mysql-test/**/include/**/*.inc",
+          "**/mysql-test/**/t/**/*.inc"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "mysql-result",
+        "aliases": [
+          "MySQL Test Result"
+        ],
+        "extensions": [
+          ".result"
+        ],
+        "filenamePatterns": [
+          "**/mysql-test/**/r/**/*.result",
+          "**/mysql-test/**/t/**/*.result"
+        ]
+      },
+      {
+        "id": "mysql-opt",
+        "aliases": [
+          "MySQL Test Option"
+        ],
+        "extensions": [
+          ".opt"
+        ],
+        "filenamePatterns": [
+          "**/mysql-test/**/t/**/*.opt"
+        ]
+      },
+      {
+        "id": "mysql-cnf",
+        "aliases": [
+          "MySQL Test Config"
+        ],
+        "extensions": [
+          ".cnf"
+        ],
+        "filenamePatterns": [
+          "**/mysql-test/**/t/**/*.cnf",
+          "**/mysql-test/include/**/*.cnf"
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "command": "mysql-test.goToPairedFile",
+        "title": "MySQL Test: Go to Paired File",
+        "category": "MySQL Test"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "mysql-test.goToPairedFile",
+        "key": "alt+o",
+        "when": "resourceLangId == mysql-test || resourceLangId == mysql-result"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "mysql-test",
+        "scopeName": "source.mysql-test",
+        "path": "./syntaxes/mysql-test.tmLanguage.json"
+      },
+      {
+        "language": "mysql-result",
+        "scopeName": "source.mysql-result",
+        "path": "./syntaxes/mysql-result.tmLanguage.json"
+      },
+      {
+        "language": "mysql-opt",
+        "scopeName": "source.mysql-opt",
+        "path": "./syntaxes/mysql-opt.tmLanguage.json"
+      },
+      {
+        "language": "mysql-cnf",
+        "scopeName": "source.ini.mysql-cnf",
+        "path": "./syntaxes/mysql-cnf.tmLanguage.json"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "package": "node esbuild.js --production && vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.116.0",
+    "@vscode/vsce": "^3.9.1",
+    "esbuild": "^0.28.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
+  },
+  "packageManager": "pnpm@10.18.3"
+}

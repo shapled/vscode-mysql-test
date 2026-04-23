@@ -1,0 +1,139 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "MySQL Test Result",
+  "scopeName": "source.mysql-result",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#mtr-directives" },
+    { "include": "#result-error" },
+    { "include": "#result-warning" },
+    { "include": "#result-null" },
+    { "include": "#result-set" },
+    { "include": "#sql-query" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.mysql-result",
+          "match": "^\\s*#.*$"
+        }
+      ]
+    },
+    "mtr-directives": {
+      "patterns": [
+        {
+          "name": "keyword.control.mtr-directive.mysql-result",
+          "match": "^(\\s*)(--)\\s*([a-zA-Z_][a-zA-Z0-9_]*)(?=\\s|$)",
+          "captures": {
+            "1": { "name": "punctuation.whitespace.leading.mysql-result" },
+            "2": { "name": "punctuation.definition.directive.mysql-result" },
+            "3": { "name": "entity.name.function.directive.mysql-result" }
+          }
+        }
+      ]
+    },
+    "result-error": {
+      "patterns": [
+        {
+          "name": "markup.error.mysql-result",
+          "match": "^ERROR\\s+\\d{5}(:\\s+.*|$)"
+        },
+        {
+          "name": "markup.error.mysql-result",
+          "match": "^ERROR\\s+HY000:\\s+.*$"
+        },
+        {
+          "name": "markup.error.mysql-result",
+          "match": "^ERROR\\s+[A-Z0-9]+:\\s+.*$"
+        }
+      ]
+    },
+    "result-warning": {
+      "patterns": [
+        {
+          "name": "markup.warning.mysql-result",
+          "match": "^Warnings?:"
+        },
+        {
+          "name": "markup.warning.mysql-result",
+          "match": "^Warning\\s+\\d+\\s+.*$"
+        },
+        {
+          "name": "markup.warning.mysql-result",
+          "match": "^Note\\s+\\d+\\s+.*$"
+        }
+      ]
+    },
+    "result-null": {
+      "patterns": [
+        {
+          "name": "constant.language.null.mysql-result",
+          "match": "(?<=\\t|^)NULL(?=\\t|$)"
+        }
+      ]
+    },
+    "result-set": {
+      "patterns": [
+        {
+          "name": "entity.name.tag.column-header.mysql-result",
+          "match": "^[A-Za-z_][A-Za-z0-9_]*(\t[A-Za-z_][A-Za-z0-9_]*)+$",
+          "comment": "Column header row: tab-separated identifiers with no spaces or special chars"
+        }
+      ]
+    },
+    "sql-query": {
+      "patterns": [
+        {
+          "name": "keyword.other.sql.mysql-result",
+          "match": "(?i)\\b(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|TRUNCATE|RENAME|SHOW|DESCRIBE|EXPLAIN|USE|ANALYZE|CHECK|OPTIMIZE|REPAIR|SET|BEGIN|COMMIT|ROLLBACK|GRANT|REVOKE|LOCK|UNLOCK|CALL|EXECUTE|FROM|WHERE|JOIN|INNER|OUTER|LEFT|RIGHT|ON|USING|GROUP\\s+BY|HAVING|ORDER\\s+BY|LIMIT|OFFSET|UNION|ALL|DISTINCT|AS|AND|OR|NOT|IN|BETWEEN|LIKE|IS|NULL|EXISTS|TABLE|INDEX|VIEW|INTO|VALUES|IF|THEN|ELSE|END|CASE|WHEN|WITH|RECURSIVE|INTO|OUTFILE|DUMPFILE|DATA|INFILE|LOAD)\\b"
+        },
+        {
+          "name": "constant.language.sql.mysql-result",
+          "match": "(?i)\\b(TRUE|FALSE|NULL|UNKNOWN)\\b"
+        },
+        {
+          "name": "string.quoted.single.sql.mysql-result",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.sql.mysql-result",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.double.sql.mysql-result",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.sql.mysql-result",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.other.backtick.sql.mysql-result",
+          "begin": "`",
+          "end": "`",
+          "patterns": [
+            {
+              "name": "constant.character.escape.sql.mysql-result",
+              "match": "``"
+            }
+          ]
+        },
+        {
+          "name": "constant.numeric.sql.mysql-result",
+          "match": "\\b(\\d+\\.?\\d*([eE][+-]?\\d+)?)\\b"
+        },
+        {
+          "name": "punctuation.terminator.statement.sql.mysql-result",
+          "match": ";"
+        }
+      ]
+    }
+  }
+}

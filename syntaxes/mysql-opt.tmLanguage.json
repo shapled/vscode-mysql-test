@@ -1,0 +1,48 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "MySQL Test Option",
+  "scopeName": "source.mysql-opt",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#variables" },
+    { "include": "#options" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.mysql-opt",
+          "match": "^\\s*#.*$"
+        }
+      ]
+    },
+    "variables": {
+      "patterns": [
+        {
+          "name": "variable.other.mtr.mysql-opt",
+          "match": "^\\$[A-Za-z_][A-Za-z0-9_]*"
+        }
+      ]
+    },
+    "options": {
+      "patterns": [
+        {
+          "name": "keyword.control.option.mysql-opt",
+          "match": "(--)([a-zA-Z_][a-zA-Z0-9_-]*)",
+          "captures": {
+            "1": { "name": "punctuation.definition.option.mysql-opt" },
+            "2": { "name": "entity.name.tag.option-name.mysql-opt" }
+          }
+        },
+        {
+          "name": "string.unquoted.option-value.mysql-opt",
+          "match": "(?<==)\\S+"
+        },
+        {
+          "name": "punctuation.separator.key-value.mysql-opt",
+          "match": "="
+        }
+      ]
+    }
+  }
+}
