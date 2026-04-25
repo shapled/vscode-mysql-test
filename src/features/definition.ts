@@ -7,6 +7,10 @@ import {
   pairCnfTest,
   resolveIncPath,
 } from "../utils/test-file";
+import {
+  findVariableDeclarationInLines,
+  getVariableAtPosition,
+} from "./variable-logic";
 
 export class MtrDefinitionProvider implements vscode.DefinitionProvider {
   provideDefinition(
@@ -15,7 +19,6 @@ export class MtrDefinitionProvider implements vscode.DefinitionProvider {
     _token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.Definition> {
     const line = document.lineAt(position.line).text;
-    const wordRange = document.getWordRangeAtPosition(position);
 
     // --source / --include: jump to .inc file
     const sourceMatch = line.match(
@@ -35,17 +38,17 @@ export class MtrDefinitionProvider implements vscode.DefinitionProvider {
     }
 
     // $variable: try to find --let declaration
-    if (wordRange) {
-      const word = document.getText(wordRange);
-      if (word.startsWith("$")) {
-        const varName = word;
-        const declLocation = findVariableDeclaration(
-          document,
-          varName
-        );
-        if (declLocation) {
-          return declLocation;
-        }
+    const varName = getVariableAtPosition(
+      line,
+      position.character
+    );
+    if (varName) {
+      const declLocation = findVariableDeclaration(
+        document,
+        varName
+      );
+      if (declLocation) {
+        return declLocation;
       }
     }
 
@@ -57,21 +60,19 @@ function findVariableDeclaration(
   document: vscode.TextDocument,
   varName: string
 ): vscode.Location | undefined {
+  const lines: string[] = [];
   for (let i = 0; i < document.lineCount; i++) {
-    const line = document.lineAt(i).text;
-    const letMatch = line.match(
-      /^\s*--\s*let\s+(\$\S+)/
+    lines.push(document.lineAt(i).text);
+  }
+  const decl = findVariableDeclarationInLines(lines, varName);
+  if (decl) {
+    return new vscode.Location(
+      document.uri,
+      new vscode.Range(
+        new vscode.Position(decl.lineIndex, decl.startCol),
+        new vscode.Position(decl.lineIndex, decl.endCol)
+      )
     );
-    if (letMatch && letMatch[1] === varName) {
-      const startIdx = line.indexOf(varName);
-      return new vscode.Location(
-        document.uri,
-        new vscode.Range(
-          new vscode.Position(i, startIdx),
-          new vscode.Position(i, startIdx + varName.length)
-        )
-      );
-    }
   }
   return undefined;
 }

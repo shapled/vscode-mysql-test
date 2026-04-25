@@ -3,11 +3,22 @@ import {
   findCommandInLine,
   buildHoverMarkdown,
   commandMap,
+  findFunctionByWord,
+  buildFunctionHoverMarkdown,
+  functionMap,
   type MtrCommand,
+  type MtrFunction,
 } from "./hover-logic";
 
-export type { MtrCommand };
-export { findCommandInLine, buildHoverMarkdown, commandMap };
+export type { MtrCommand, MtrFunction };
+export {
+  findCommandInLine,
+  buildHoverMarkdown,
+  commandMap,
+  findFunctionByWord,
+  buildFunctionHoverMarkdown,
+  functionMap,
+};
 
 export class MtrHoverProvider implements vscode.HoverProvider {
   provideHover(
@@ -17,9 +28,6 @@ export class MtrHoverProvider implements vscode.HoverProvider {
   ): vscode.ProviderResult<vscode.Hover> {
     const line = document.lineAt(position.line).text;
     const cmdName = findCommandInLine(line);
-    if (!cmdName) {
-      return undefined;
-    }
 
     const wordRange = document.getWordRangeAtPosition(position);
     if (!wordRange) {
@@ -27,15 +35,23 @@ export class MtrHoverProvider implements vscode.HoverProvider {
     }
 
     const word = document.getText(wordRange);
-    // wordPattern includes "-", so "--connect" is one word.
-    // Match if word ends with the command name.
-    if (!word.toLowerCase().endsWith(cmdName)) {
-      return undefined;
+
+    // Try MTR command (line-starting)
+    if (cmdName && word.toLowerCase().endsWith(cmdName)) {
+      const cmd = commandMap.get(cmdName)!;
+      const md = new vscode.MarkdownString(buildHoverMarkdown(cmd));
+      md.isTrusted = true;
+      return new vscode.Hover(md, wordRange);
     }
 
-    const cmd = commandMap.get(cmdName)!;
-    const md = new vscode.MarkdownString(buildHoverMarkdown(cmd));
-    md.isTrusted = true;
-    return new vscode.Hover(md, wordRange);
+    // Try MTR function (any position in line)
+    const fn = findFunctionByWord(word);
+    if (fn) {
+      const md = new vscode.MarkdownString(buildFunctionHoverMarkdown(fn));
+      md.isTrusted = true;
+      return new vscode.Hover(md, wordRange);
+    }
+
+    return undefined;
   }
 }

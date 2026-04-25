@@ -1,6 +1,6 @@
 {
   "name": "mysql-test",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "displayName": "MySQL Test Run",
   "description": "Syntax highlighting and navigation for MySQL test files (.test, .result, .opt, .cnf)",
   "publisher": "shapled",
@@ -140,7 +140,9 @@
     "@vscode/vsce": "^3.9.1",
     "esbuild": "^0.28.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.5",
+    "vscode-oniguruma": "^1.7.0",
+    "vscode-textmate": "^9.3.2"
   },
   "packageManager": "pnpm@10.18.3"
 }

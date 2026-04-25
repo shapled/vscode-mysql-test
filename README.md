@@ -55,6 +55,16 @@ None.
 
 ## Release Notes
 
+### 1.0.4
+
+- Add `perl`/`--perl` block syntax highlighting with built-in Perl keywords, functions, variables, operators, and strings
+- Add file path link highlighting for `source`, `write_file`, `append_file`, `cat_file`, `mkdir`, etc. with Ctrl+Click navigation
+- Add document link provider for path commands to navigate to existing files on disk
+- Treat `die`/`--die` content as raw string (variables are not expanded or highlighted)
+- Treat `echo`/`--echo` content as unquoted string
+- Add backtick string highlighting with embedded SQL for `let $q = \`SELECT ...\``
+- Fix variable jump when `$variable` is adjacent to other characters (e.g. `d$i.t1`)
+
 ### 1.0.3
 
 - Add hover documentation for 90+ MTR commands with syntax, description, examples, and links to official docs

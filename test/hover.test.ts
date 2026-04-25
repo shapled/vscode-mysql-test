@@ -3,7 +3,13 @@ import {
   findCommandInLine,
   buildHoverMarkdown,
   commandMap,
+  findFunctionByWord,
+  buildFunctionHoverMarkdown,
+  functionMap,
 } from "../src/features/hover-logic";
+
+// @ts-ignore
+import langConfig from "../language-configuration.json";
 
 describe("findCommandInLine", () => {
   it("should find command with -- prefix", () => {
@@ -263,5 +269,117 @@ describe("buildHoverMarkdown", () => {
     const md = buildHoverMarkdown(cmd);
     expect(md).toContain("PAGE_MYSQL_TEST_");
     expect(md).toContain(".html");
+  });
+});
+
+describe("findFunctionByWord", () => {
+  it("should find query_get_value", () => {
+    expect(findFunctionByWord("query_get_value")).toBeDefined();
+    expect(findFunctionByWord("query_get_value")!.name).toBe(
+      "query_get_value"
+    );
+  });
+
+  it("should find convert_error", () => {
+    expect(findFunctionByWord("convert_error")).toBeDefined();
+    expect(findFunctionByWord("convert_error")!.name).toBe("convert_error");
+  });
+
+  it("should be case-insensitive", () => {
+    expect(findFunctionByWord("Query_Get_Value")).toBeDefined();
+    expect(findFunctionByWord("CONVERT_ERROR")).toBeDefined();
+  });
+
+  it("should return undefined for unknown words", () => {
+    expect(findFunctionByWord("not_a_function")).toBeUndefined();
+    expect(findFunctionByWord("SELECT")).toBeUndefined();
+    expect(findFunctionByWord("echo")).toBeUndefined();
+  });
+
+  it("should not match partial words", () => {
+    expect(findFunctionByWord("query_get")).toBeUndefined();
+    expect(findFunctionByWord("convert")).toBeUndefined();
+  });
+});
+
+describe("buildFunctionHoverMarkdown", () => {
+  it("should include function name in bold", () => {
+    const fn = functionMap.get("query_get_value")!;
+    const md = buildFunctionHoverMarkdown(fn);
+    expect(md).toContain("**query_get_value**");
+  });
+
+  it("should include syntax", () => {
+    const fn = functionMap.get("query_get_value")!;
+    const md = buildFunctionHoverMarkdown(fn);
+    expect(md).toContain("`query_get_value(query, col_name, row_num)`");
+  });
+
+  it("should include description", () => {
+    const fn = functionMap.get("query_get_value")!;
+    const md = buildFunctionHoverMarkdown(fn);
+    expect(md).toContain("Execute a query and return the value");
+  });
+
+  it("should not include doc link (functions link from let command)", () => {
+    const fn = functionMap.get("query_get_value")!;
+    const md = buildFunctionHoverMarkdown(fn);
+    expect(md).not.toContain("[View documentation]");
+  });
+
+  it("should work for convert_error", () => {
+    const fn = functionMap.get("convert_error")!;
+    const md = buildFunctionHoverMarkdown(fn);
+    expect(md).toContain("**convert_error**");
+    expect(md).toContain("`convert_error(error)`");
+    expect(md).toContain("error code");
+  });
+});
+
+describe("functionMap", () => {
+  it("should contain both functions", () => {
+    expect(functionMap.has("query_get_value")).toBe(true);
+    expect(functionMap.has("convert_error")).toBe(true);
+  });
+
+  it("each function should have required fields", () => {
+    for (const [, fn] of functionMap) {
+      expect(typeof fn.name).toBe("string");
+      expect(typeof fn.syntax).toBe("string");
+      expect(typeof fn.description).toBe("string");
+    }
+  });
+});
+
+describe("wordPattern", () => {
+  const wordPattern = new RegExp(langConfig.wordPattern, "g");
+
+  function extractWords(line: string): string[] {
+    return [...line.matchAll(wordPattern)].map((m) => m[0]);
+  }
+
+  it("should match command name after -- prefix", () => {
+    const words = extractWords("--echo $message;");
+    expect(words).toContain("echo");
+  });
+
+  it("should match long command name after -- prefix", () => {
+    const words = extractWords("--disable_query_log");
+    expect(words).toContain("disable_query_log");
+  });
+
+  it("should match $variable", () => {
+    const words = extractWords("--let $counter = 0;");
+    expect(words).toContain("$counter");
+  });
+
+  it("should match bare command at line start", () => {
+    const words = extractWords("let $counter = 0;");
+    expect(words).toContain("let");
+  });
+
+  it("should match function name in expression", () => {
+    const words = extractWords("let $v = query_get_value(SHOW STATUS, Col, 1);");
+    expect(words).toContain("query_get_value");
   });
 });
