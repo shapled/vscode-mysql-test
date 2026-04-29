@@ -6,7 +6,15 @@
 
 ## Features
 
-Syntax highlighting and navigation for MySQL test files (`.test`, `.result`, `.opt`, `.cnf`).
+- [Syntax Highlighting](#syntax-highlighting)
+- [MTR Command Recognition](#mtr-command-recognition)
+- [Variable Tracking](#variable-tracking)
+- [Navigation](#navigation)
+- [Hover Documentation](#hover-documentation)
+- [Cross-Platform Support](#cross-platform-support)
+- [Test Execution](#test-execution)
+- [Build Integration](#build-integration)
+- [Tree View Panels](#tree-view-panels)
 
 ### Syntax Highlighting
 
@@ -22,16 +30,39 @@ Provides TextMate-based syntax highlighting for MySQL test framework files:
 
 Files are automatically recognized when located under a `mysql-test/` directory tree (e.g. `mysql-test/t/`, `mysql-test/suite/innodb/t/`).
 
+### MTR Command Recognition
+
 MTR commands are recognized both with the `--` prefix (`--echo text`) and without (`echo text;`), so non-command lines are properly highlighted as SQL.
+
+| Directive                                                         | Highlighting                                                  |
+| ----------------------------------------------------------------- | ------------------------------------------------------------- |
+| `--eval` / `eval`                                                 | SQL keywords, variables, strings                              |
+| `--echo` / `echo`                                                 | Entire content as unquoted string (variables are expanded)    |
+| `--die` / `die`                                                   | Entire content as raw string (variables are NOT expanded)     |
+| `--let` / `let`                                                   | Variable declaration, strings, backtick-embedded SQL          |
+| `--perl` / `perl`                                                 | Perl block with built-in keywords, functions, variables, etc. |
+| `--exec` / `exec`                                                 | Shell command content                                         |
+| `--error`                                                         | Error code or variable                                        |
+| Path commands (`source`, `write_file`, `cat_file`, `mkdir`, etc.) | File paths as clickable links                                 |
+
+### Variable Tracking
+
+Full variable lifecycle support for `$variable` references across MTR test files:
+
+- **Go to Definition** — Ctrl+Click on `$variable` to jump to its `--let` declaration in the current file
+- **Find All References** — Shift+F12 to find all usages of a variable across the current file and included `.inc` files (up to 16 levels deep)
+- **Document Highlight** — Click on a variable to highlight all occurrences in the current file, with declarations shown in write style and usages in read style
+- **Adjacent Variable Support** — Variables without preceding spaces (e.g. `d$i.t1`) are correctly recognized for navigation
+
+Variables inside `die`/`--die` raw strings are excluded from tracking since they are not expanded.
 
 ### Navigation
 
 - **Go to Paired File** — Click the CodeLens link at the top of each file to jump to related files:
-  - `.test` → shows links to `.result`, `.opt`, `.cnf` (if they exist)
+  - `.test` → shows Run Test button first, then links to `.result`, `.opt`, `.cnf` (if they exist)
   - `.result` / `.opt` / `.cnf` → shows link back to `.test`
 - **Alt+O** — Keyboard shortcut to jump between `.test` and `.result` files
-- **Go to Definition** — Ctrl+Click on `--source` / `--include` paths to jump to `.inc` files
-- **Variable Jump** — Ctrl+Click on `$variable` to jump to its `--let` declaration
+- **File Path Navigation** — Ctrl+Click on file paths in path commands (`source`, `write_file`, `cat_file`, `mkdir`, etc.) to open the target file
 
 ### Hover Documentation
 
@@ -41,13 +72,64 @@ Hover over any MTR command to see its syntax, description, usage example, and a 
 
 Works on Windows (including WSL paths), macOS, and Linux. File pairing and include path resolution handle both forward slashes and backslashes.
 
+### Test Execution
+
+Run MySQL test cases directly from VS Code using MTR (MySQL Test Run):
+
+- **Run Test** — Click the CodeLens button at the top of any `.test` file, or press **F5**
+- **Run & Record** — Runs with `--record` flag; after all tests pass, updated `.result` files are synced back to the source tree
+- Tests are automatically synced from source to install directory before running
+- Real-time MTR output is shown in a log file tab
+
+### Build Integration
+
+- **Incremental Build** and **Full Rebuild** commands, configurable via settings
+- Build output is shown in the "MySQL Test" output channel
+
+### Tree View Panels
+
+The extension adds two panels in the sidebar:
+
+**Configuration** — Displays all extension settings with status indicators. Click any setting to open `.vscode/settings.json` with auto-created default values.
+
+**MySQL Test Run** — Contains three groups:
+
+- **Opened Test Cases** — Lists all open `.test` file tabs; click to navigate
+- **Actions** — Provides quick access to common operations:
+  - Sync and Run Test / Run & Record
+  - Incremental Build / Full Rebuild
+  - Sync Suite (delete and re-copy entire suite from source)
+- **History** — Shows the last 20 test runs with status, duration, and relative time
+
+Unavailable actions are greyed out with a reason description (e.g. "installDir not configured", "no test file selected").
+
 ## Requirements
 
 - VS Code 1.85.0 or later
 
 ## Extension Settings
 
-This extension does not add any settings.
+| Setting                     | Default             | Description                                                  |
+| --------------------------- | ------------------- | ------------------------------------------------------------ |
+| `mysql-test.installDir`     |                     | Path to the MySQL install directory containing `mysql-test/` |
+| `mysql-test.buildDir`       |                     | Path to the build output directory                           |
+| `mysql-test.buildCommand`   |                     | Incremental build command (executed in `buildDir`)           |
+| `mysql-test.rebuildCommand` |                     | Full rebuild command (executed in `buildDir`)                |
+| `mysql-test.autoSync`       | `true`              | Auto-sync test files before running                          |
+| `mysql-test.debugAdapter`   | `auto`              | Debug adapter to use (`auto`, `lldb`, `cppdbg`)              |
+| `mysql-test.mtrArgs`        | `--force --retry=0` | Arguments passed to MTR when running tests                   |
+
+## Commands
+
+| Command                       | Key   | Description                                       |
+| ----------------------------- | ----- | ------------------------------------------------- |
+| MySQL Test: Run Test          | F5    | Run the current `.test` file via MTR              |
+| MySQL Test: Run & Record      |       | Run with `--record` and sync `.result` files back |
+| MySQL Test: Incremental Build |       | Execute the incremental build command             |
+| MySQL Test: Full Rebuild      |       | Execute the full rebuild command                  |
+| MySQL Test: Sync Suite        |       | Delete and re-copy the current test suite         |
+| MySQL Test: Refresh Tests     |       | Refresh the test discovery                        |
+| MySQL Test: Go to Paired File | Alt+O | Jump to the paired `.test`/`.result` file         |
 
 ## Known Issues
 
@@ -55,32 +137,4 @@ None.
 
 ## Release Notes
 
-### 1.0.4
-
-- Add `perl`/`--perl` block syntax highlighting with built-in Perl keywords, functions, variables, operators, and strings
-- Add file path link highlighting for `source`, `write_file`, `append_file`, `cat_file`, `mkdir`, etc. with Ctrl+Click navigation
-- Add document link provider for path commands to navigate to existing files on disk
-- Treat `die`/`--die` content as raw string (variables are not expanded or highlighted)
-- Treat `echo`/`--echo` content as unquoted string
-- Add backtick string highlighting with embedded SQL for `let $q = \`SELECT ...\``
-- Fix variable jump when `$variable` is adjacent to other characters (e.g. `d$i.t1`)
-
-### 1.0.3
-
-- Add hover documentation for 90+ MTR commands with syntax, description, examples, and links to official docs
-- Recognize MTR commands without `--` prefix (semicolon-terminated), properly separate them from SQL highlighting
-- Fix CodeLens and file pairing on Windows (backslash paths and WSL paths)
-
-### 1.0.2
-
-- Expand VS Code compatibility to 1.85.0+
-- Fix relative path resolution for `--source ../include/xxx.inc`
-
-### 1.0.1
-
-Initial release:
-
-- Syntax highlighting for `.test`, `.result`, `.opt`, `.cnf`, `.inc` files
-- CodeLens links for paired file navigation
-- Alt+O shortcut for test/result switching
-- Go to Definition for `--source`/`--include` and MTR variables
+See [CHANGELOG.md](CHANGELOG.md).

@@ -1,4 +1,5 @@
 import * as path from "path";
+import * as fs from "fs";
 
 /**
  * Normalize path separators to forward slashes for consistent matching.
@@ -8,22 +9,33 @@ function normalizePath(p: string): string {
 }
 
 /**
+ * Resolve symlinks and normalize path separators.
+ */
+export function resolveRealPath(p: string): string {
+  try {
+    return normalizePath(fs.realpathSync(p));
+  } catch {
+    return normalizePath(p);
+  }
+}
+
+/**
  * Find the mysql-test root directory from a file path.
  * Returns the original path prefix up to and including "mysql-test".
  */
 export function findMysqlTestRoot(
   filePath: string
 ): string | undefined {
-  const normalized = normalizePath(filePath);
-  const parts = normalized.split("/");
-  const originalParts = filePath.split(/[/\\]/);
+  const resolved = resolveRealPath(filePath);
+  const parts = resolved.split("/");
 
   const idx = parts.lastIndexOf("mysql-test");
   if (idx < 0) {
     return undefined;
   }
 
-  return originalParts.slice(0, idx + 1).join(path.sep);
+  // Reconstruct the real path up to and including "mysql-test"
+  return parts.slice(0, idx + 1).join(path.sep);
 }
 
 /**
@@ -99,8 +111,8 @@ export function resolveIncPathString(
   let resolved: string;
   const normalized = incPath.replace(/\\/g, "/");
   if (normalized.startsWith("../") || normalized.startsWith("./")) {
-    // Relative to current file's directory
-    resolved = path.resolve(path.dirname(currentFile), incPath);
+    // Relative to current file's real directory
+    resolved = path.resolve(resolveRealPath(path.dirname(currentFile)), incPath);
   } else {
     // Relative to mysql-test root
     resolved = path.join(root, incPath);
@@ -110,4 +122,62 @@ export function resolveIncPathString(
     return resolved + ".inc";
   }
   return resolved;
+}
+
+/**
+ * Derive the MTR fully qualified test name from a .test file path.
+ * e.g. /repo/mysql-test/suite/innodb/t/alias.test → "innodb.alias"
+ *       /repo/mysql-test/suite/starsql/rpl/t/x.test → "starsql/rpl.x"
+ *       /repo/mysql-test/t/alias.test               → "main.alias"
+ * Returns undefined if the path doesn't match the expected structure.
+ */
+export function deriveTestName(fsPath: string): string | undefined {
+  const root = findMysqlTestRoot(fsPath);
+  if (!root) return undefined;
+
+  const normalized = fsPath.replace(/\\/g, "/");
+  const normalizedRoot = root.replace(/\\/g, "/");
+  const relative = normalized.substring(normalizedRoot.length);
+
+  // Nested suite: /suite/parent/child/t/name.test → "parent/child.name"
+  const nestedMatch = relative.match(/^\/suite\/(.+)\/t\/([^/]+)\.test$/);
+  if (nestedMatch) return `${nestedMatch[1]}.${nestedMatch[2]}`;
+
+  // Main suite: /t/name.test → "main.name"
+  const mainMatch = relative.match(/^\/t\/([^/]+)\.test$/);
+  if (mainMatch) return `main.${mainMatch[1]}`;
+
+  return undefined;
+}
+
+/**
+ * Scan filesystem for suite directories under installDir/mysql-test/.
+ * - "main" suite: <installDir>/mysql-test/t/
+ * - Top-level suites: <installDir>/mysql-test/suite/<name>/t/
+ * - Nested suites: <installDir>/mysql-test/suite/<parent>/<name>/t/
+ */
+export function scanSuites(installDir: string): string[] {
+  const suites: string[] = [];
+
+  if (fs.existsSync(path.join(installDir, "mysql-test", "t"))) {
+    suites.push("main");
+  }
+
+  const suiteDir = path.join(installDir, "mysql-test", "suite");
+  if (!fs.existsSync(suiteDir)) return suites;
+
+  for (const entry of fs.readdirSync(suiteDir, { withFileTypes: true })) {
+    if (entry.isDirectory() && fs.existsSync(path.join(suiteDir, entry.name, "t"))) {
+      suites.push(entry.name);
+
+      // Nested: suite/<parent>/<child>/t/
+      for (const sub of fs.readdirSync(path.join(suiteDir, entry.name), { withFileTypes: true })) {
+        if (sub.isDirectory() && fs.existsSync(path.join(suiteDir, entry.name, sub.name, "t"))) {
+          suites.push(`${entry.name}/${sub.name}`);
+        }
+      }
+    }
+  }
+
+  return suites.sort();
 }

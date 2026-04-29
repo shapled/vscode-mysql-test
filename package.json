@@ -1,8 +1,8 @@
 {
   "name": "mysql-test",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "displayName": "MySQL Test Run",
-  "description": "Syntax highlighting and navigation for MySQL test files (.test, .result, .opt, .cnf)",
+  "description": "Run MySQL test cases (MTR) from VS Code with syntax highlighting, navigation, and test management",
   "publisher": "shapled",
   "license": "MIT",
   "repository": {
@@ -30,10 +30,74 @@
     "onLanguage:mysql-test",
     "onLanguage:mysql-result",
     "onLanguage:mysql-opt",
-    "onLanguage:mysql-cnf"
+    "onLanguage:mysql-cnf",
+    "onCommand:mysql-test.refreshTests",
+    "onCommand:mysql-test.runTestFromFile",
+    "onCommand:mysql-test.incrementalBuild",
+    "onCommand:mysql-test.fullRebuild",
+    "onCommand:mysql-test.syncSuite",
+    "onCommand:mysql-test.runTestWithRecord",
+    "onView:mysql-test-explorer"
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "MySQL Test",
+      "properties": {
+        "mysql-test.installDir": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Path to the MySQL install directory containing `mysql-test/`.\n\nExample: `${workspaceFolder}/installDir`",
+          "order": 1
+        },
+        "mysql-test.buildDir": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Path to the build output directory (where cmake/ninja builds).\n\nExample: `${workspaceFolder}/build-Debug`",
+          "order": 2
+        },
+        "mysql-test.buildCommand": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Incremental build command, executed in buildDir.\n\nExample: `make install`",
+          "order": 3
+        },
+        "mysql-test.rebuildCommand": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Full rebuild command, executed in buildDir.\n\nExample: `cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=${workspaceFolder}/installDir && make install`",
+          "order": 4
+        },
+        "mysql-test.autoSync": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically sync .test files from source tree to installDir before running",
+          "order": 5
+        },
+        "mysql-test.debugAdapter": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "lldb",
+            "cppdbg"
+          ],
+          "enumDescriptions": [
+            "Auto-detect: prefer CodeLLDB, fall back to cpptools",
+            "Use CodeLLDB extension for debugging",
+            "Use Microsoft C/C++ (cpptools) extension for debugging"
+          ],
+          "description": "Debug adapter to use for mysqld debugging",
+          "order": 6
+        },
+        "mysql-test.mtrArgs": {
+          "type": "string",
+          "default": "--force --retry=0",
+          "markdownDescription": "Arguments passed to MTR when running tests.\n\nDefault: `--force --retry=0`",
+          "order": 7
+        }
+      }
+    },
     "languages": [
       {
         "id": "mysql-test",
@@ -96,13 +160,84 @@
         "command": "mysql-test.goToPairedFile",
         "title": "MySQL Test: Go to Paired File",
         "category": "MySQL Test"
+      },
+      {
+        "command": "mysql-test.refreshTests",
+        "title": "MySQL Test: Refresh Tests",
+        "category": "MySQL Test",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "mysql-test.runTestFromFile",
+        "title": "MySQL Test: Run Test",
+        "category": "MySQL Test",
+        "icon": "$(play)"
+      },
+      {
+        "command": "mysql-test.incrementalBuild",
+        "title": "MySQL Test: Incremental Build",
+        "category": "MySQL Test",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "mysql-test.fullRebuild",
+        "title": "MySQL Test: Full Rebuild",
+        "category": "MySQL Test",
+        "icon": "$(tools)"
+      },
+      {
+        "command": "mysql-test.syncSuite",
+        "title": "MySQL Test: Sync Suite",
+        "category": "MySQL Test",
+        "icon": "$(file-symlink-file)"
+      },
+      {
+        "command": "mysql-test.runTestWithRecord",
+        "title": "MySQL Test: Run & Record",
+        "category": "MySQL Test",
+        "icon": "$(record)"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "mysql-test-explorer",
+          "title": "MySQL Test",
+          "icon": "./icon.png"
+        }
+      ]
+    },
+    "views": {
+      "mysql-test-explorer": [
+        {
+          "id": "mysql-test-configuration",
+          "name": "Configuration"
+        },
+        {
+          "id": "mysql-test-current",
+          "name": "MySQL Test Run"
+        }
+      ]
+    },
+    "menus": {
+      "editor/context": [
+        {
+          "command": "mysql-test.runTestFromFile",
+          "when": "resourceLangId == mysql-test",
+          "group": "navigation@1"
+        }
+      ]
+    },
     "keybindings": [
       {
         "command": "mysql-test.goToPairedFile",
         "key": "alt+o",
         "when": "resourceLangId == mysql-test || resourceLangId == mysql-result"
+      },
+      {
+        "command": "mysql-test.runTestFromFile",
+        "key": "f5",
+        "when": "resourceLangId == mysql-test"
       }
     ],
     "grammars": [
@@ -129,13 +264,15 @@
     ]
   },
   "scripts": {
-    "build": "node esbuild.js",
+    "build": "tsc --noEmit && node esbuild.js",
     "watch": "node esbuild.js --watch",
-    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "test": "tsc --noEmit && vitest run",
     "test:watch": "vitest",
-    "package": "node esbuild.js --production && vsce package"
+    "package": "tsc --noEmit && node esbuild.js --production && vsce package"
   },
   "devDependencies": {
+    "@types/node": "^25.6.0",
     "@types/vscode": "^1.85.0",
     "@vscode/vsce": "^3.9.1",
     "esbuild": "^0.28.0",

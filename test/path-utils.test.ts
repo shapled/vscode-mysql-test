@@ -1,9 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   findMysqlTestRoot,
   pairTestResultPath,
   pairSuffixFileToTest,
   resolveIncPathString,
+  deriveTestName,
+  scanSuites,
 } from "../src/utils/path-utils";
 
 describe("findMysqlTestRoot", () => {
@@ -291,5 +293,90 @@ describe("resolveIncPathString", () => {
         "./big_packets.inc"
       )
     ).toBe("/project/mysql-test/t/big_packets.inc");
+  });
+});
+
+describe("deriveTestName", () => {
+  it("should derive main suite test name", () => {
+    expect(deriveTestName("/repo/mysql-test/t/alias.test")).toBe("main.alias");
+  });
+
+  it("should derive top-level suite test name", () => {
+    expect(deriveTestName("/repo/mysql-test/suite/innodb/t/lock.test")).toBe("innodb.lock");
+  });
+
+  it("should derive nested suite test name", () => {
+    expect(deriveTestName("/repo/mysql-test/suite/starsql/rpl/t/my_test.test")).toBe("starsql/rpl.my_test");
+  });
+
+  it("should return undefined for non-test file", () => {
+    expect(deriveTestName("/repo/mysql-test/t/alias.result")).toBeUndefined();
+  });
+
+  it("should return undefined for path outside mysql-test", () => {
+    expect(deriveTestName("/other/file.test")).toBeUndefined();
+  });
+
+  it("should return undefined for suite without t/ directory", () => {
+    expect(deriveTestName("/repo/mysql-test/suite/innodb/lock.test")).toBeUndefined();
+  });
+});
+
+describe("scanSuites", () => {
+  const fs = require("fs") as typeof import("fs");
+  const path = require("path") as typeof import("path");
+  const os = require("os") as typeof import("os");
+
+  let tmpDir: string;
+
+  function createSuite(base: string, suitePath: string): void {
+    const dir = path.join(base, "mysql-test", suitePath, "t");
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, "dummy.test"), "");
+  }
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "mtr-suites-"));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it("should return empty list when no mysql-test directory", () => {
+    expect(scanSuites(tmpDir)).toEqual([]);
+  });
+
+  it("should detect main suite", () => {
+    createSuite(tmpDir, "");
+    expect(scanSuites(tmpDir)).toEqual(["main"]);
+  });
+
+  it("should detect top-level suites", () => {
+    createSuite(tmpDir, "");
+    createSuite(tmpDir, "suite/innodb");
+    createSuite(tmpDir, "suite/rpl");
+    expect(scanSuites(tmpDir)).toEqual(["innodb", "main", "rpl"]);
+  });
+
+  it("should detect nested suites", () => {
+    createSuite(tmpDir, "");
+    createSuite(tmpDir, "suite/starsql");
+    createSuite(tmpDir, "suite/starsql/rpl");
+    expect(scanSuites(tmpDir)).toEqual(["main", "starsql", "starsql/rpl"]);
+  });
+
+  it("should skip directories without t/ subdirectory", () => {
+    createSuite(tmpDir, "");
+    fs.mkdirSync(path.join(tmpDir, "mysql-test", "suite", "not_a_suite"), { recursive: true });
+    expect(scanSuites(tmpDir)).toEqual(["main"]);
+  });
+
+  it("should sort suites alphabetically", () => {
+    createSuite(tmpDir, "suite/zzz");
+    createSuite(tmpDir, "suite/aaa");
+    createSuite(tmpDir, "");
+    const result = scanSuites(tmpDir);
+    expect(result).toEqual(["aaa", "main", "zzz"]);
   });
 });

@@ -11,6 +11,7 @@ import {
   findVariableDeclarationInLines,
   getVariableAtPosition,
 } from "./variable-logic";
+import { findMysqlTestRoot } from "../utils/path-utils";
 
 export class MtrDefinitionProvider implements vscode.DefinitionProvider {
   provideDefinition(
@@ -82,6 +83,35 @@ function findVariableDeclaration(
  */
 function altOKeybinding(): string {
   return process.platform === "darwin" ? "⌥O" : "Alt+O";
+}
+
+/**
+ * Derive the MTR fully qualified test name from a .test file path.
+ * e.g. /repo/mysql-test/suite/innodb/t/alias.test → "innodb.alias"
+ *       /repo/mysql-test/t/alias.test               → "main.alias"
+ * Returns undefined if the path doesn't match the expected structure.
+ */
+function deriveTestName(fsPath: string): string | undefined {
+  const root = findMysqlTestRoot(fsPath);
+  if (!root) return undefined;
+
+  const normalized = fsPath.replace(/\\/g, "/");
+  const normalizedRoot = root.replace(/\\/g, "/");
+  const relative = normalized.substring(normalizedRoot.length);
+
+  // suite/innodb/t/alias.test → suite=innodb, name=alias
+  const suiteMatch = relative.match(/^\/suite\/([^/]+)\/t\/([^/]+)\.test$/);
+  if (suiteMatch) {
+    return `${suiteMatch[1]}.${suiteMatch[2]}`;
+  }
+
+  // t/alias.test → suite=main
+  const mainMatch = relative.match(/^\/t\/([^/]+)\.test$/);
+  if (mainMatch) {
+    return `main.${mainMatch[1]}`;
+  }
+
+  return undefined;
 }
 
 interface PairedTarget {
@@ -156,7 +186,7 @@ function registerOpenPairedFileCommand(
 
 /**
  * CodeLens provider: shows links to paired files at the top.
- * .test files show multiple links (result, opt, cnf).
+ * .test files show multiple links (result, opt, cnf) + Run/Debug buttons.
  * Others show a single link back to .test.
  */
 export class MtrPairedFileCodeLensProvider
@@ -165,20 +195,34 @@ export class MtrPairedFileCodeLensProvider
     document: vscode.TextDocument
   ): vscode.CodeLens[] {
     const targets = getPairedFiles(document);
-    if (targets.length === 0) {
-      return [];
+    const range = new vscode.Range(0, 0, 0, 0);
+    const lenses: vscode.CodeLens[] = [];
+
+    // Run button for .test files (before paired file links)
+    if (document.uri.fsPath.endsWith(".test")) {
+      const testName = deriveTestName(document.uri.fsPath);
+      if (testName) {
+        lenses.push(new vscode.CodeLens(range, {
+          title: "$(play) Run Test",
+          tooltip: `Run ${testName}`,
+          command: "mysql-test.runTestFromFile",
+          arguments: [testName],
+        }));
+      }
     }
 
-    const range = new vscode.Range(0, 0, 0, 0);
-    return targets.map((t) => {
+    // Paired file links
+    for (const t of targets) {
       const basename = path.basename(t.uri.fsPath);
-      return new vscode.CodeLens(range, {
+      lenses.push(new vscode.CodeLens(range, {
         title: basename,
         tooltip: `Open ${t.label}`,
         command: "mysql-test.openPairedFile",
         arguments: [t.uri],
-      });
-    });
+      }));
+    }
+
+    return lenses;
   }
 }
 
