@@ -95,7 +95,7 @@ export function pairSuffixFileToTest(
 }
 
 /**
- * Resolve a --source or --include path to a .inc file path.
+ * Resolve a --source or --include path.
  * Paths starting with `../` or `./` are relative to the current file's directory.
  * Other paths are relative to the mysql-test root directory.
  */
@@ -118,9 +118,6 @@ export function resolveIncPathString(
     resolved = path.join(root, incPath);
   }
 
-  if (path.extname(resolved) !== ".inc") {
-    return resolved + ".inc";
-  }
   return resolved;
 }
 

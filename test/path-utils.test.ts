@@ -226,13 +226,13 @@ describe("resolveIncPathString", () => {
     ).toBe("/project/mysql-test/include/assert.inc");
   });
 
-  it("should append .inc if not present", () => {
+  it("should NOT append .inc when path has no extension", () => {
     expect(
       resolveIncPathString(
         "/project/mysql-test/t/alias.test",
         "include/assert"
       )
-    ).toBe("/project/mysql-test/include/assert.inc");
+    ).toBe("/project/mysql-test/include/assert");
   });
 
   it("should resolve from nested suite file", () => {
@@ -293,6 +293,26 @@ describe("resolveIncPathString", () => {
         "./big_packets.inc"
       )
     ).toBe("/project/mysql-test/t/big_packets.inc");
+  });
+
+  it("should NOT append .inc when path already has .test extension", () => {
+    expect(
+      resolveIncPathString(
+        "/project/mysql-test/suite/rpl/t/rpl_xa_survive_disconnect_lsu_off.test",
+        "./rpl_xa_survive_disconnect.test"
+      )
+    ).toBe(
+      "/project/mysql-test/suite/rpl/t/rpl_xa_survive_disconnect.test"
+    );
+  });
+
+  it("should NOT append .inc when path already has .sql extension", () => {
+    expect(
+      resolveIncPathString(
+        "/project/mysql-test/t/big_packets.test",
+        "./init.sql"
+      )
+    ).toBe("/project/mysql-test/t/init.sql");
   });
 });
 
