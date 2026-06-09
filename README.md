@@ -15,6 +15,7 @@
 - [Test Execution](#test-execution)
 - [Build Integration](#build-integration)
 - [Tree View Panels](#tree-view-panels)
+- [Path Autocompletion](#path-autocompletion)
 
 ### Syntax Highlighting
 
@@ -103,6 +104,13 @@ The extension adds two panels in the sidebar:
 
 Unavailable actions are greyed out with a reason description (e.g. "installDir not configured", "no test file selected").
 
+### Path Autocompletion
+
+Autocompletion for file paths in `source` / `include` commands:
+
+- Paths without `./` / `../` are resolved relative to the `mysql-test` root directory
+- Paths with `./` / `../` are resolved relative to the current file's directory
+
 ## Requirements
 
 - VS Code 1.85.0 or later
@@ -130,10 +138,6 @@ Unavailable actions are greyed out with a reason description (e.g. "installDir n
 | MySQL Test: Sync Suite        |       | Delete and re-copy the current test suite         |
 | MySQL Test: Refresh Tests     |       | Refresh the test discovery                        |
 | MySQL Test: Go to Paired File | Alt+O | Jump to the paired `.test`/`.result` file         |
-
-## Known Issues
-
-None.
 
 ## Release Notes
 

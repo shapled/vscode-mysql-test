@@ -7,6 +7,7 @@ import { MtrDocumentLinkProvider } from "./features/document-link";
 import { MtrHoverProvider } from "./features/hover";
 import { MtrDocumentHighlightProvider } from "./features/highlight";
 import { MtrReferenceProvider } from "./features/references";
+import { MtrCompletionProvider } from "./features/completion";
 import { activateTesting } from "./testing/test-controller";
 import { getOutputChannel } from "./testing/output-channel";
 import { initOutputChannel } from "./testing/output-channel";
@@ -77,6 +78,16 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.languages.registerDocumentLinkProvider(
       selector,
       new MtrDocumentLinkProvider()
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.languages.registerCompletionItemProvider(
+      selector,
+      new MtrCompletionProvider(),
+      "/",
+      "$",
+      "."
     )
   );
 

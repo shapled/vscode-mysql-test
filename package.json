@@ -1,6 +1,6 @@
 {
   "name": "mysql-test",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "displayName": "MySQL Test Run",
   "description": "Run MySQL test cases (MTR) from VS Code with syntax highlighting, navigation, and test management",
   "publisher": "shapled",

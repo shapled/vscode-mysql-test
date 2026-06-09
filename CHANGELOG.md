@@ -1,3 +1,8 @@
+## [1.1.1]
+
+- Fix `--source`/`--include` path resolution incorrectly appending `.inc` to paths that already have an extension (e.g. `--source ./file.test` was resolved to `file.test.inc`)
+- Add **path autocompletion** for `--source`/`--include` commands — lists matching files and directories based on partial path input, supports relative paths (`./`, `../`), mysql-test root-relative paths, and absolute paths
+
 ## [1.1.0]
 
 ### Test Execution
