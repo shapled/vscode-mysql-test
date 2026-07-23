@@ -15,8 +15,10 @@
     "comments": {
       "patterns": [
         {
+          "begin": "^\\s*#",
+          "end": "$",
           "name": "comment.line.number-sign.mysql-test",
-          "match": "^\\s*#.*$"
+          "contentName": "comment.line.number-sign.mysql-test"
         }
       ]
     },
@@ -128,8 +130,43 @@
           ]
         },
         {
+          "comment": "write_file/append_file block with -- prefix, custom end marker",
+          "begin": "^(\\s*)(--)\\s*(write_file|append_file)\\b\\s+(\\S+)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "end": "^\\s*\\5\\s*$",
+          "beginCaptures": {
+            "1": { "name": "punctuation.whitespace.leading.mysql-test" },
+            "2": { "name": "punctuation.definition.directive.mysql-test" },
+            "3": { "name": "entity.name.function.directive.mysql-test" },
+            "4": { "patterns": [{ "include": "#mtr-variables" }, { "name": "markup.underline.link", "match": "[A-Za-z0-9_./\\-]+" }] },
+            "5": { "name": "string.unquoted.mtr.mysql-test" }
+          },
+          "endCaptures": {
+            "0": { "name": "entity.name.function.directive.mysql-test" }
+          },
+          "contentName": "string.unquoted.mtr.mysql-test",
+          "patterns": []
+        },
+        {
+          "comment": "write_file/append_file block with -- prefix, default EOF",
+          "begin": "^(\\s*)(--)\\s*(write_file|append_file)\\b\\s+(\\S+)\\s*$",
+          "end": "^\\s*EOF\\s*$",
+          "beginCaptures": {
+            "1": { "name": "punctuation.whitespace.leading.mysql-test" },
+            "2": { "name": "punctuation.definition.directive.mysql-test" },
+            "3": { "name": "entity.name.function.directive.mysql-test" },
+            "4": { "patterns": [{ "include": "#mtr-variables" }, { "name": "markup.underline.link", "match": "[A-Za-z0-9_./\\-]+" }] }
+          },
+          "endCaptures": {
+            "0": { "name": "entity.name.function.directive.mysql-test" }
+          },
+          "contentName": "string.unquoted.mtr.mysql-test",
+          "patterns": [
+            { "include": "#mtr-variables" }
+          ]
+        },
+        {
           "comment": "file path directives (path content as link)",
-          "begin": "^(\\s*)(--)\\s*(source|write_file|append_file|copy_file|copy_files_wildcard|move_file|remove_file|remove_files_wildcard|cat_file|list_files|list_files_append_file|list_files_write_file|mkdir|rmdir|chmod|file_exists|diff_files)\\b",
+          "begin": "^(\\s*)(--)\\s*(source|copy_file|copy_files_wildcard|move_file|remove_file|remove_files_wildcard|cat_file|list_files|list_files_append_file|list_files_write_file|mkdir|rmdir|chmod|file_exists|diff_files)\\b",
           "end": "$",
           "beginCaptures": {
             "1": { "name": "punctuation.whitespace.leading.mysql-test" },
@@ -169,9 +206,9 @@
           ]
         },
         {
-          "comment": "let command without -- prefix (supports string values)",
+          "comment": "let command without -- prefix (supports string values, multi-line until ;)",
           "begin": "^\\s*(let)\\b",
-          "end": "$",
+          "end": ";\\s*$",
           "beginCaptures": {
             "0": { "name": "entity.name.function.directive.mysql-test" }
           },
@@ -182,9 +219,9 @@
           ]
         },
         {
-          "comment": "die command without -- prefix (raw string, variables are NOT expanded)",
+          "comment": "die command without -- prefix (raw string, multi-line until ;)",
           "begin": "^\\s*(die)\\b",
-          "end": "$",
+          "end": ";\\s*$",
           "contentName": "string.unquoted.mtr.mysql-test",
           "beginCaptures": {
             "0": { "name": "entity.name.function.directive.mysql-test" }
@@ -194,9 +231,9 @@
           ]
         },
         {
-          "comment": "exec commands without -- prefix (shell content)",
+          "comment": "exec commands without -- prefix (shell content, multi-line until ;)",
           "begin": "^\\s*(exec[_a-z]*)\\b",
-          "end": "$",
+          "end": ";\\s*$",
           "beginCaptures": {
             "0": { "name": "entity.name.function.directive.mysql-test" }
           },
@@ -206,9 +243,9 @@
           ]
         },
         {
-          "comment": "echo command without -- prefix (entire content is a string)",
+          "comment": "echo command without -- prefix (entire content is a string, multi-line until ;)",
           "begin": "^\\s*(echo)\\b",
-          "end": "$",
+          "end": ";\\s*$",
           "beginCaptures": {
             "0": { "name": "entity.name.function.directive.mysql-test" }
           },
@@ -218,9 +255,40 @@
           ]
         },
         {
-          "comment": "file path commands without -- prefix (path content as link)",
-          "begin": "^\\s*(source|write_file|append_file|copy_file|copy_files_wildcard|move_file|remove_file|remove_files_wildcard|cat_file|list_files|list_files_append_file|list_files_write_file|mkdir|rmdir|chmod|file_exists|diff_files)\\b",
-          "end": "$",
+          "comment": "write_file/append_file block without -- prefix, custom end marker",
+          "begin": "^\\s*(write_file|append_file)\\b\\s+(\\S+)\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*;",
+          "end": "^\\s*\\3\\s*$",
+          "beginCaptures": {
+            "1": { "name": "entity.name.function.directive.mysql-test" },
+            "2": { "patterns": [{ "include": "#mtr-variables" }, { "name": "markup.underline.link", "match": "[A-Za-z0-9_./\\-]+" }] },
+            "3": { "name": "string.unquoted.mtr.mysql-test" }
+          },
+          "endCaptures": {
+            "0": { "name": "entity.name.function.directive.mysql-test" }
+          },
+          "contentName": "string.unquoted.mtr.mysql-test",
+          "patterns": []
+        },
+        {
+          "comment": "write_file/append_file block without -- prefix, default EOF",
+          "begin": "^\\s*(write_file|append_file)\\b\\s+(\\S+)\\s*;",
+          "end": "^\\s*EOF\\s*$",
+          "beginCaptures": {
+            "1": { "name": "entity.name.function.directive.mysql-test" },
+            "2": { "patterns": [{ "include": "#mtr-variables" }, { "name": "markup.underline.link", "match": "[A-Za-z0-9_./\\-]+" }] }
+          },
+          "endCaptures": {
+            "0": { "name": "entity.name.function.directive.mysql-test" }
+          },
+          "contentName": "string.unquoted.mtr.mysql-test",
+          "patterns": [
+            { "include": "#mtr-variables" }
+          ]
+        },
+        {
+          "comment": "file path commands without -- prefix (path content as link, multi-line until ;)",
+          "begin": "^\\s*(source|copy_file|copy_files_wildcard|move_file|remove_file|remove_files_wildcard|cat_file|list_files|list_files_append_file|list_files_write_file|mkdir|rmdir|chmod|file_exists|diff_files)\\b",
+          "end": ";\\s*$",
           "beginCaptures": {
             "0": { "name": "entity.name.function.directive.mysql-test" }
           },
@@ -261,9 +329,9 @@
           ]
         },
         {
-          "comment": "MTR commands without -- prefix (non-SQL, no strings)",
+          "comment": "MTR commands without -- prefix (non-SQL, multi-line until ;)",
           "begin": "^\\s*(append_file|assert|cat_file|change_user|character_set|chmod|connect|connection|copy_file|copy_files_wildcard|dec|delimiter|diff_files|dirty_close|disable_abort_on_error|disable_async_client|disable_connect_log|disable_info|disable_metadata|disable_ps_protocol|disable_query_log|disable_result_log|disable_rpl_parse|disable_session_track_info|disable_testcase|disable_warnings|disconnect|enable_abort_on_error|enable_async_client|enable_connect_log|enable_info|enable_metadata|enable_ps_protocol|enable_query_log|enable_result_log|enable_rpl_parse|enable_session_track_info|enable_warnings|end|end_timer|error|exit|expr|file_exists|force|horizontal_results|inc|list_files|list_files_append_file|list_files_write_file|lowercase_result|mkdir|move_file|output|partially_sorted_result|ping|query_get_value|reap|remove_file|remove_files_wildcard|replace_column|replace_numeric_round|replace_regex|replace_result|reset_connection|result_format|rmdir|save_master_pos|send_quit|send_shutdown|shutdown_server|skip|sleep|sorted_result|source|start_timer|sync_slave_with_master|sync_with_master|vertical_results|wait_for_slave_to_stop|write_file)\\b",
-          "end": "$",
+          "end": ";\\s*$",
           "beginCaptures": {
             "0": { "name": "entity.name.function.directive.mysql-test" }
           },
@@ -288,6 +356,7 @@
     },
     "perl-content": {
       "patterns": [
+        { "include": "source.perl" },
         { "include": "#strings" },
         {
           "name": "comment.line.number-sign.perl",
@@ -366,28 +435,6 @@
     "strings": {
       "patterns": [
         {
-          "name": "string.quoted.single.mtr.mysql-test",
-          "begin": "'",
-          "end": "'",
-          "patterns": [
-            {
-              "name": "constant.character.escape.mtr.mysql-test",
-              "match": "\\\\."
-            }
-          ]
-        },
-        {
-          "name": "string.quoted.double.mtr.mysql-test",
-          "begin": "\"",
-          "end": "\"",
-          "patterns": [
-            {
-              "name": "constant.character.escape.mtr.mysql-test",
-              "match": "\\\\."
-            }
-          ]
-        },
-        {
           "name": "string.quoted.backtick.mtr.mysql-test",
           "begin": "`",
           "end": "`",
@@ -404,46 +451,16 @@
     },
     "sql": {
       "patterns": [
-        { "include": "#strings" },
+        { "include": "source.sql" },
         {
-          "name": "keyword.other.sql.ddl.mysql-test",
-          "match": "(?i)\\b(CREATE|ALTER|DROP|RENAME|TRUNCATE|TABLE|DATABASE|SCHEMA|INDEX|VIEW|TRIGGER|PROCEDURE|FUNCTION|EVENT|TEMPORARY|IF\\s+NOT\\s+EXISTS|IF\\s+EXISTS)\\b"
-        },
-        {
-          "name": "keyword.other.sql.dml.mysql-test",
-          "match": "(?i)\\b(SELECT|INSERT|INTO|VALUES|UPDATE|SET|DELETE|REPLACE|MERGE|CALL|EXECUTE|FROM|WHERE|JOIN|INNER|OUTER|LEFT|RIGHT|FULL|CROSS|ON|USING|GROUP\\s+BY|HAVING|ORDER\\s+BY|LIMIT|OFFSET|UNION|ALL|DISTINCT|INTERSECT|EXCEPT|AS|AND|OR|NOT|IN|BETWEEN|LIKE|IS|NULL|EXISTS|CASE|WHEN|THEN|ELSE|END|WITH|RECURSIVE)\\b"
-        },
-        {
+          "comment": "MySQL-specific keywords not in source.sql",
           "name": "keyword.other.sql.mysql-test",
-          "match": "(?i)\\b(SHOW|DESCRIBE|EXPLAIN|USE|START|BEGIN|COMMIT|ROLLBACK|SAVEPOINT|LOCK|UNLOCK|GRANT|REVOKE|PREPARE|DEALLOCATE|DECLARE|HANDLER|OPEN|CLOSE|FETCH|RETURN|LEAVE|ITERATE|LOOP|REPEAT|WHILE|CURSOR|FOR|CONTINUE\\s+HANDLER|EXIT\\s+HANDLER|SIGNAL|RESIGNAL|GET\\s+DIAGNOSTICS)\\b"
+          "match": "(?i)\\b(FLUSH|RESET|PURGE|OPTIMIZE|ANALYZE|CHECK|REPAIR|LOAD|UNLOCK|LOCK|HANDLER|PREPARE|DEALLOCATE|KILL|SHUTDOWN|RESTART|INSTALL|UNINSTALL|CLONE|ADMIN|IMPORT|REPLICA|REPLICATION|XA|BINLOG|CACHE|SIGNAL|RESIGNAL|GET|DIAGNOSTICS|DECLARE|CURSOR|FETCH|LOOP|REPEAT|LEAVE|ITERATE|RETURN|SHOW|DESCRIBE|DESC|EXPLAIN|USE|START|BEGIN|COMMIT|ROLLBACK|SAVEPOINT|GRANT|REVOKE|CHANGE|STOP|SOURCE|CALL|EXECUTE|DEALLOCATE)\\b"
         },
         {
-          "name": "keyword.other.sql.admin.mysql-test",
-          "match": "(?i)\\b(ANALYZE|CHECK|OPTIMIZE|REPAIR|BACKUP|RESTORE|INSTALL|UNINSTALL|SHUTDOWN|RESTART|KILL|LOAD|DATA|INFILE|OUTFILE|DUMPFILE|FLUSH|RESET|PURGE|MASTER|SLAVE|REPLICA|SOURCE|REPLICATION|CHANGE|STOP|START|CONFIG|XA)\\b"
-        },
-        {
-          "name": "keyword.other.sql.types.mysql-test",
-          "match": "(?i)\\b(INT|INTEGER|TINYINT|SMALLINT|MEDIUMINT|BIGINT|FLOAT|DOUBLE|DECIMAL|NUMERIC|CHAR|VARCHAR|BINARY|VARBINARY|TINYBLOB|BLOB|MEDIUMBLOB|LONGBLOB|TINYTEXT|TEXT|MEDIUMTEXT|LONGTEXT|DATE|TIME|DATETIME|TIMESTAMP|YEAR|ENUM|SET|BOOL|BOOLEAN|SERIAL|FIXED|GEOMETRY|POINT|LINESTRING|POLYGON|MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|GEOMETRYCOLLECTION|JSON|VECTOR)\\b"
-        },
-        {
-          "name": "keyword.other.sql.constraints.mysql-test",
-          "match": "(?i)\\b(PRIMARY|KEY|UNIQUE|FOREIGN|REFERENCES|CONSTRAINT|CHECK|DEFAULT|AUTO_INCREMENT|UNSIGNED|ZEROFILL|ON\\s+DELETE|ON\\s+UPDATE|CASCADE|RESTRICT|SET\\s+NULL|NO\\s+ACTION)\\b"
-        },
-        {
-          "name": "keyword.other.sql.functions.mysql-test",
-          "match": "(?i)\\b(AVG|COUNT|MAX|MIN|SUM|GROUP_CONCAT|CONCAT|LENGTH|SUBSTRING|TRIM|UPPER|LOWER|REPLACE|REVERSE|LEFT|RIGHT|LPAD|RPAD|INSERT|LOCATE|INSTR|FIELD|FIND_IN_SET|FORMAT|CONV|HEX|UNHEX|CAST|CONVERT|COALESCE|IFNULL|NULLIF|IF|CASE|GREATEST|LEAST|ROW_COUNT|FOUND_ROWS|LAST_INSERT_ID|CONNECTION_ID|VERSION|DATABASE|USER|CURRENT_USER|CURRENT_DATE|CURRENT_TIME|CURRENT_TIMESTAMP|NOW|CURDATE|CURTIME|DATE|DATE_ADD|DATE_SUB|DATEDIFF|DATE_FORMAT|EXTRACT|YEAR|MONTH|DAY|HOUR|MINUTE|SECOND|MICROSECOND|QUARTER|WEEK|YEARWEEK|TIMESTAMPDIFF|TIMESTAMPADD|UNIX_TIMESTAMP|FROM_UNIXTIME|SEC_TO_TIME|TIME_TO_SEC|STR_TO_DATE|MD5|SHA|SHA1|SHA2|PASSWORD|ENCRYPT|DECODE|ENCODE|AES_ENCRYPT|AES_DECRYPT|COMPRESS|UNCOMPRESS|RANDOM_BYTES|UUID|UUID_SHORT|SLEEP|BENCHMARK|GET_LOCK|RELEASE_LOCK|IS_FREE_LOCK|IS_USED_LOCK|INET_ATON|INET_NTOA|INET6_ATON|INET6_NTOA|JSON_EXTRACT|JSON_CONTAINS|JSON_ARRAY|JSON_OBJECT|JSON_TYPE|JSON_VALID|JSON_LENGTH|JSON_DEPTH|JSON_KEYS|JSON_INSERT|JSON_REPLACE|JSON_REMOVE|JSON_SET|JSON_UNQUOTE|JSON_SEARCH|JSON_ARRAY_APPEND|JSON_ARRAY_INSERT|JSON_MERGE_PATCH|JSON_MERGE_PRESERVE|REGEXP|RLIKE|NOT\\s+REGEXP|SOUNDS\\s+LIKE|MATCH|AGAINST|FULLTEXT|SPATIAL|ELT|FIELD)\\b"
-        },
-        {
-          "name": "keyword.other.sql.variables.mysql-test",
-          "match": "(?i)\\b(GLOBAL|SESSION|LOCAL|@@|@)\\b"
-        },
-        {
-          "name": "constant.language.sql.mysql-test",
-          "match": "(?i)\\b(TRUE|FALSE|UNKNOWN|NULL)\\b"
-        },
-        {
-          "name": "support.function.mysql-test",
-          "match": "(?i)\\b(enable_async_client|disable_async_client)\\b"
+          "comment": "MySQL functions/types/constants source.sql may miss",
+          "name": "support.function.sql.mysql-test",
+          "match": "(?i)\\b(GROUP_CONCAT|IFNULL|NULLIF|COALESCE|GREATEST|LEAST|ROW_COUNT|FOUND_ROWS|LAST_INSERT_ID|CONNECTION_ID|VERSION|DATABASE|USER|CURRENT_USER|CURRENT_DATE|CURRENT_TIME|CURRENT_TIMESTAMP|NOW|CURDATE|CURTIME|UNIX_TIMESTAMP|FROM_UNIXTIME|UUID|SLEEP|BENCHMARK|GET_LOCK|RELEASE_LOCK|INET_ATON|INET_NTOA|JSON_EXTRACT|JSON_CONTAINS|JSON_ARRAY|JSON_OBJECT|JSON_TYPE|JSON_VALID|JSON_LENGTH|JSON_KEYS|JSON_INSERT|JSON_REPLACE|JSON_REMOVE|JSON_SET|JSON_UNQUOTE|REGEXP|RLIKE)\\b"
         },
         {
           "name": "constant.numeric.sql.mysql-test",

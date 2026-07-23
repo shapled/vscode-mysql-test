@@ -16,10 +16,16 @@
 - [Build Integration](#build-integration)
 - [Tree View Panels](#tree-view-panels)
 - [Path Autocompletion](#path-autocompletion)
+- [AST-Based Parsing (mtparser)](#ast-based-parsing-mtparser)
 
 ### Syntax Highlighting
 
-Provides TextMate-based syntax highlighting for MySQL test framework files:
+Syntax highlighting is powered by two layers:
+
+1. **TextMate grammar** — base layer for instant highlighting on file open
+2. **Semantic tokens** (via [mtparser](#ast-based-parsing-mtparser)) — AST-driven overlay for precise token classification (command keywords, variables, strings, comments, operators)
+
+Colors automatically follow the active VS Code theme. The extension enables `editor.semanticHighlighting.enabled` for `mysql-test` files by default.
 
 | File Type | Scope           | Highlights                                                                                                                                |
 | --------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
@@ -111,6 +117,24 @@ Autocompletion for file paths in `source` / `include` commands:
 - Paths without `./` / `../` are resolved relative to the `mysql-test` root directory
 - Paths with `./` / `../` are resolved relative to the current file's directory
 
+### AST-Based Parsing (mtparser)
+
+All language features (hover, definition, references, highlight, completion, semantic tokens) are backed by [**@shapled/mtparser**](https://github.com/shapled/mtparser) — a Rust-based parser for MySQL `mysqltest` and MariaDB `mariadb-test` files, compiled to WASM.
+
+**What it provides:**
+
+- Full typed AST with source location spans for every token (commands, variables, strings, comments, operators, block braces, end markers)
+- Correct parsing of multi-line constructs: `write_file`/`append_file` blocks, `perl` blocks (with heredoc `END` markers), multi-line `echo`, multi-line `let` with backtick SQL
+- `if`/`while` block bodies are recursively traversed for nested statements
+- `query_get_value` function arguments are parsed with individual spans (function name, parentheses, commas, SQL/column/row args)
+- Version-aware command recognition (MySQL 5.7/8.0/8.4/9.7, MariaDB 10.11–12.3)
+
+**How it works in this extension:**
+
+- The WASM binary is loaded via standard `WebAssembly.instantiate` (no dependency on Node experimental flags)
+- Parse results are cached per document version — reparsing only happens when the document changes
+- The AST feeds both the semantic tokens provider (for highlighting) and all navigation/reference providers
+
 ## Requirements
 
 - VS Code 1.85.0 or later
@@ -142,3 +166,7 @@ Autocompletion for file paths in `source` / `include` commands:
 ## Release Notes
 
 See [CHANGELOG.md](CHANGELOG.md).
+
+## Powered By
+
+[**mtparser**](https://github.com/shapled/mtparser) — A Rust-based parser for MySQL `mysqltest` and MariaDB `mariadb-test` files. If you're building tooling around `.test`/`.inc` files (linters, formatters, language servers), check it out!

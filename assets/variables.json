@@ -1,0 +1,60 @@
+{
+  "5.7": {
+    "ENABLED_ABORT_ON_ERROR": "Boolean. Whether abort on error is enabled.",
+    "ENABLED_CONNECT_LOG": "Boolean. Whether connection logging is enabled.",
+    "ENABLED_INFO": "Boolean. Whether info output is enabled.",
+    "ENABLED_STATE_CHANGE_INFO": "Boolean. Whether session state change info is enabled.",
+    "ENABLED_METADATA": "Boolean. Whether metadata output is enabled.",
+    "ENABLED_PS_PROTOCOL": "Boolean. Whether prepared statement protocol is enabled.",
+    "ENABLED_QUERY_LOG": "Boolean. Whether query logging is enabled.",
+    "ENABLED_RESULT_LOG": "Boolean. Whether result logging is enabled.",
+    "ENABLED_WARNINGS": "Boolean. Whether warnings are enabled.",
+    "mysql_errno": "Integer. The error number from the last query.",
+    "mysql_errname": "String. The error name from the last query.",
+    "mysql_get_server_version": "Integer. The server version number.",
+    "CURRENT_CONNECTION": "String. The name of the current connection.",
+    "PS_PROTOCOL": "Integer. Whether PS protocol is in use.",
+    "SP_PROTOCOL": "Integer. Whether SP protocol is in use.",
+    "VIEW_PROTOCOL": "Integer. Whether view protocol is in use.",
+    "OPT_TRACE_PROTOCOL": "Integer. Whether optimizer trace protocol is in use.",
+    "EXPLAIN_PROTOCOL": "Integer. Whether explain protocol is in use.",
+    "JSON_EXPLAIN_PROTOCOL": "Integer. Whether JSON explain protocol is in use.",
+    "CURSOR_PROTOCOL": "Integer. Whether cursor protocol is in use.",
+    "SYSTEM_PATH_SEPARATOR": "String. The system path separator (/ or \\).",
+    "MYSQL_SERVER_VERSION": "String. The MySQL server version string.",
+    "MYSQL_SYSTEM_TYPE": "String. The system type.",
+    "MYSQL_MACHINE_TYPE": "String. The machine type.",
+    "MYSQL_SYSTEM_ARCHITECTURE": "String. Architecture (32 or 64).",
+    "MYSQLTEST_FILE": "String. The current test file name."
+  },
+  "8.0.46": {
+    "_note": "Variables are described in prose format in the documentation",
+    "_prose": "You can define variables and refer to their values.\n\nYou can also refer to environment variables, and there is a built-in variable that contains the result of the most recent SQL statement.\n\nTo define a variable, use the let command. Examples:\n\nlet $a= 14;\nlet $b= this is a string;\n--let $a= 14\n--let $b= this is a string\n\nThe variable name cannot contain whitespace or the “=” character.\n\nIf a variable has a numeric value, you can increment or decrement the value:\n\ninc $a;\ndec $a;\n--inc $a\n--dec $a\n\n inc and dec are commonly used in while loops to modify the value of a counter variable that controls loop execution.\n\nThe result from executing a query can be assigned to a variable by enclosing the query within backtick (“`”) characters:\n\nlet $q= `select version()`;\n\nReferences to variables can occur in the echo , eval , exec , and system commands. Variable references are replaced by their values. A nonquery value assigned to a variable in a let command can also refer to variables.\n\nVariable references that occur within ` query ` are expanded before the query is sent to the server for execution.\n\nYou can refer to environment variables. For example, this command displays the value of the $PATH variable from the environment:\n\n--echo $PATH\n\n $mysql_errno is a built-in variable that contains the numeric error returned by the most recent SQL statement sent to the server, or 0 if the statement executed successfully. $mysql_errno has a value of −1 if no statement has yet been sent.\n\n $mysql_errname similarly contains the symbolic name of the last error, or an empty string if there was no error.\n\n mysqltest first checks mysqltest variables and then environment variables. mysqltest variable names are not case sensitive. Environment variable names are case sensitive.",
+    "mysql_errno": "is a built-in variable that contains the numeric error returned by the most recent SQL statement sent to the server, or 0 if the statement executed successfully. $mysql_errno has a value of −1 if no statement has yet been sent.",
+    "mysql_errname": "similarly contains the symbolic name of the last error, or an empty string if there was no error.\nmysqltest first checks mysqltest variables and then environment variables. mysqltest variable names are not case sensitive. Environment variable names are case sensitive.",
+    "PATH": "Referenced in documentation (see _prose for context).",
+    "a": "Referenced in documentation (see _prose for context).",
+    "b": "Referenced in documentation (see _prose for context).",
+    "q": "Referenced in documentation (see _prose for context)."
+  },
+  "8.4.8": {
+    "_note": "Variables are described in prose format in the documentation",
+    "_prose": "You can define variables and refer to their values.\n\nYou can also refer to environment variables, and there is a built-in variable that contains the result of the most recent SQL statement.\n\nTo define a variable, use the let command. Examples:\n\nlet $a= 14;\nlet $b= this is a string;\n--let $a= 14\n--let $b= this is a string\n\nThe variable name cannot contain whitespace or the “=” character.\n\nIf a variable has a numeric value, you can increment or decrement the value:\n\ninc $a;\ndec $a;\n--inc $a\n--dec $a\n\n inc and dec are commonly used in while loops to modify the value of a counter variable that controls loop execution.\n\nThe result from executing a query can be assigned to a variable by enclosing the query within backtick (“`”) characters:\n\nlet $q= `select version()`;\n\nReferences to variables can occur in the echo , eval , exec , and system commands. Variable references are replaced by their values. A nonquery value assigned to a variable in a let command can also refer to variables.\n\nVariable references that occur within ` query ` are expanded before the query is sent to the server for execution.\n\nYou can refer to environment variables. For example, this command displays the value of the $PATH variable from the environment:\n\n--echo $PATH\n\n $mysql_errno is a built-in variable that contains the numeric error returned by the most recent SQL statement sent to the server, or 0 if the statement executed successfully. $mysql_errno has a value of −1 if no statement has yet been sent.\n\n $mysql_errname similarly contains the symbolic name of the last error, or an empty string if there was no error.\n\n mysqltest first checks mysqltest variables and then environment variables. mysqltest variable names are not case sensitive. Environment variable names are case sensitive.",
+    "mysql_errno": "is a built-in variable that contains the numeric error returned by the most recent SQL statement sent to the server, or 0 if the statement executed successfully. $mysql_errno has a value of −1 if no statement has yet been sent.",
+    "mysql_errname": "similarly contains the symbolic name of the last error, or an empty string if there was no error.\nmysqltest first checks mysqltest variables and then environment variables. mysqltest variable names are not case sensitive. Environment variable names are case sensitive.",
+    "PATH": "Referenced in documentation (see _prose for context).",
+    "a": "Referenced in documentation (see _prose for context).",
+    "b": "Referenced in documentation (see _prose for context).",
+    "q": "Referenced in documentation (see _prose for context)."
+  },
+  "9.7.0": {
+    "_note": "Variables are described in prose format in the documentation",
+    "_prose": "You can define variables and refer to their values.\n\nYou can also refer to environment variables, and there is a built-in variable that contains the result of the most recent SQL statement.\n\nTo define a variable, use the let command. Examples:\n\nlet $a= 14;\nlet $b= this is a string;\n--let $a= 14\n--let $b= this is a string\n\nThe variable name cannot contain whitespace or the “=” character.\n\nIf a variable has a numeric value, you can increment or decrement the value:\n\ninc $a;\ndec $a;\n--inc $a\n--dec $a\n\n inc and dec are commonly used in while loops to modify the value of a counter variable that controls loop execution.\n\nThe result from executing a query can be assigned to a variable by enclosing the query within backtick (“`”) characters:\n\nlet $q= `select version()`;\n\nReferences to variables can occur in the echo , eval , exec , and system commands. Variable references are replaced by their values. A nonquery value assigned to a variable in a let command can also refer to variables.\n\nVariable references that occur within ` query ` are expanded before the query is sent to the server for execution.\n\nYou can refer to environment variables. For example, this command displays the value of the $PATH variable from the environment:\n\n--echo $PATH\n\n $mysql_errno is a built-in variable that contains the numeric error returned by the most recent SQL statement sent to the server, or 0 if the statement executed successfully. $mysql_errno has a value of −1 if no statement has yet been sent.\n\n $mysql_errname similarly contains the symbolic name of the last error, or an empty string if there was no error.\n\n mysqltest first checks mysqltest variables and then environment variables. mysqltest variable names are not case sensitive. Environment variable names are case sensitive.",
+    "mysql_errno": "is a built-in variable that contains the numeric error returned by the most recent SQL statement sent to the server, or 0 if the statement executed successfully. $mysql_errno has a value of −1 if no statement has yet been sent.",
+    "mysql_errname": "similarly contains the symbolic name of the last error, or an empty string if there was no error.\nmysqltest first checks mysqltest variables and then environment variables. mysqltest variable names are not case sensitive. Environment variable names are case sensitive.",
+    "PATH": "Referenced in documentation (see _prose for context).",
+    "a": "Referenced in documentation (see _prose for context).",
+    "b": "Referenced in documentation (see _prose for context).",
+    "q": "Referenced in documentation (see _prose for context)."
+  }
+}

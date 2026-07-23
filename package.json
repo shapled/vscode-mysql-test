@@ -1,6 +1,6 @@
 {
   "name": "mysql-test",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "displayName": "MySQL Test Run",
   "description": "Run MySQL test cases (MTR) from VS Code with syntax highlighting, navigation, and test management",
   "publisher": "shapled",
@@ -41,6 +41,11 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "configurationDefaults": {
+      "[mysql-test]": {
+        "editor.semanticHighlighting.enabled": true
+      }
+    },
     "configuration": {
       "title": "MySQL Test",
       "properties": {
@@ -211,11 +216,13 @@
       "mysql-test-explorer": [
         {
           "id": "mysql-test-configuration",
-          "name": "Configuration"
+          "name": "Configuration",
+          "icon": "./icon.png"
         },
         {
           "id": "mysql-test-current",
-          "name": "MySQL Test Run"
+          "name": "MySQL Test Run",
+          "icon": "./icon.png"
         }
       ]
     },
@@ -281,5 +288,8 @@
     "vscode-oniguruma": "^1.7.0",
     "vscode-textmate": "^9.3.2"
   },
-  "packageManager": "pnpm@10.18.3"
+  "packageManager": "pnpm@10.18.3",
+  "dependencies": {
+    "@shapled/mtparser": "0.3.3"
+  }
 }

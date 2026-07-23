@@ -1,3 +1,40 @@
+## [1.2.0]
+
+### Structured AST Parsing (mtparser)
+
+- Replace regex-based parsing with **@shapled/mtparser** WASM parser for all language features
+- Parse `.test`/`.inc` files into a typed AST with source location spans for every token
+- Multi-line constructs correctly recognized: `write_file`/`append_file` blocks, `perl` blocks (with heredoc `END` markers), multi-line `echo`, multi-line `let` with backtick SQL
+
+### Semantic Syntax Highlighting
+
+- Add **Semantic Tokens** provider for AST-driven syntax highlighting (command keywords, `$variables`, strings, comments, operators, block braces, end markers)
+- Colors follow the active theme via standard token types — no hard-coded hex values
+- Auto-enable `editor.semanticHighlighting.enabled` for `mysql-test` language via `configurationDefaults`
+- Recursive token extraction into `if`/`while` block bodies
+
+### TextMate Grammar Improvements
+
+- Non-prefix commands (`let`/`echo`/`die`/`exec`/file-path commands) now use `;\s*$` as end pattern, preventing multi-line content from leaking into SQL scope
+- `#sql` rules use `source.sql` (VS Code built-in SQL grammar) + MySQL-specific keyword supplement (`FLUSH`/`SHOW`/`RESET`/etc.)
+- `#strings` simplified: removed cross-line single/double quote rules (only backtick SQL remains)
+- `#comments` use `begin/end` with `name` to ensure the `#` character gets the comment scope
+- `perl` block content delegates to `source.perl` (VS Code built-in Perl grammar)
+
+### Hover Documentation
+
+- Merge command docs from `mtlang-wrapper` skill (`assets/commands.json`) with hand-curated `mtr-commands.json`
+- Add built-in variable documentation (`assets/variables.json`)
+- Hover `$MYSQL_TMP_DIR` etc. to see variable descriptions
+
+### Other Improvements
+
+- AST-based `query_get_value` function parsing: function name, parentheses, commas, and arguments each have precise spans
+- `end_marker` spans for `write_file`/`append_file`/`perl` blocks (open + close markers)
+- `open_brace_span`/`close_brace_span` for `if`/`while` blocks
+- WASM loaded via standard `WebAssembly.instantiate` (no dependency on Node experimental wasm-modules flag)
+- Dynamic color theme switching (`onDidChangeActiveColorTheme`) with dark/light/high-contrast palettes
+
 ## [1.1.1]
 
 - Fix `--source`/`--include` path resolution incorrectly appending `.inc` to paths that already have an extension (e.g. `--source ./file.test` was resolved to `file.test.inc`)

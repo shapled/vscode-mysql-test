@@ -2,129 +2,72 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import { resolveIncPathString, findMysqlTestRoot } from "../utils/path-utils";
+import { astCache } from "../ast/ast-cache";
+import {
+  findFilePaths,
+} from "../ast/ast-query";
 
-const PATH_COMMANDS = [
-  "source",
-  "write_file",
-  "append_file",
-  "copy_file",
-  "copy_files_wildcard",
-  "move_file",
-  "remove_file",
-  "remove_files_wildcard",
-  "cat_file",
-  "mkdir",
-  "rmdir",
-  "chmod",
-  "file_exists",
-  "diff_files",
-  "list_files",
-  "list_files_append_file",
-  "list_files_write_file",
-];
-
-const COMMAND_RE = new RegExp(
-  `^\\s*(?:--\\s*)?(${PATH_COMMANDS.join("|")})\\b\\s*(.+)`,
-  "i"
-);
-
+/**
+ * Document link provider for file paths in MTR commands.
+ *
+ * Backed by the AST: walks all File I/O commands (source, write_file,
+ * cat_file, mkdir, copy_file, ...) and emits clickable links for any
+ * path that resolves to an existing file or directory.
+ */
 export class MtrDocumentLinkProvider
   implements vscode.DocumentLinkProvider {
-  provideDocumentLinks(
+  async provideDocumentLinks(
     document: vscode.TextDocument,
     _token: vscode.CancellationToken
-  ): vscode.DocumentLink[] {
+  ): Promise<vscode.DocumentLink[]> {
+    const statements = await astCache.get(document);
+    const refs = findFilePaths(statements, document.getText());
+
     const links: vscode.DocumentLink[] = [];
 
-    for (let i = 0; i < document.lineCount; i++) {
-      const line = document.lineAt(i).text;
-      const match = line.match(COMMAND_RE);
-      if (!match) {
-        continue;
-      }
-
-      const argsPart = match[2].replace(/;\s*$/, "").trim();
-      if (!argsPart) {
-        continue;
-      }
-
-      // Build the full argument span (after command name)
-      const fullArgsStart = line.indexOf(argsPart);
-      if (fullArgsStart < 0) {
-        continue;
-      }
-
-      const argRange = new vscode.Range(
-        i,
-        fullArgsStart,
-        i,
-        fullArgsStart + argsPart.length
-      );
-
-      // Try to resolve as .inc path (for source command)
-      const resolved = resolveIncPathString(
-        document.uri.fsPath,
-        argsPart
-      );
+    for (const ref of refs) {
+      // Resolve the path. Paths with $variables: try to resolve the literal
+      // portion; if not resolvable, fall back to the document directory.
+      const resolved = this.resolvePath(document.uri.fsPath, ref.path);
 
       if (resolved && fs.existsSync(resolved)) {
-        const uri = vscode.Uri.file(resolved);
-        links.push(new vscode.DocumentLink(argRange, uri));
-        continue;
-      }
-
-      // For other file commands, try resolving relative to current file dir
-      const root = findMysqlTestRoot(document.uri.fsPath);
-      let filePath = argsPart;
-
-      // Handle paths that start with $variable - skip variable prefix
-      const varPrefixMatch = filePath.match(
-        /^(\$\w+\s*)(.+)/
-      );
-      if (varPrefixMatch) {
-        filePath = varPrefixMatch[2];
-        // Adjust range to exclude the variable prefix
-        const varLen = varPrefixMatch[1].length;
-        const adjustedRange = new vscode.Range(
-          i,
-          fullArgsStart + varLen,
-          i,
-          fullArgsStart + argsPart.length
-        );
-        const resolvedPath = root
-          ? path.join(root, filePath)
-          : path.resolve(
-              path.dirname(document.uri.fsPath),
-              filePath
-            );
-        if (fs.existsSync(resolvedPath)) {
-          links.push(
-            new vscode.DocumentLink(
-              adjustedRange,
-              vscode.Uri.file(resolvedPath)
-            )
-          );
-        }
-        continue;
-      }
-
-      // Try resolving as relative path
-      const basePath = root
-        ? path.join(root, filePath)
-        : path.resolve(
-            path.dirname(document.uri.fsPath),
-            filePath
-          );
-      if (fs.existsSync(basePath)) {
+        const startPos = document.positionAt(ref.offset);
+        const endPos = document.positionAt(ref.offset + ref.length);
         links.push(
           new vscode.DocumentLink(
-            argRange,
-            vscode.Uri.file(basePath)
+            new vscode.Range(startPos, endPos),
+            vscode.Uri.file(resolved)
           )
         );
       }
     }
 
     return links;
+  }
+
+  private resolvePath(currentFile: string, rawPath: string): string | undefined {
+    // Paths with $variable prefix: we can't fully resolve without a runtime
+    // environment, so skip variable-prefixed paths for link resolution.
+    if (rawPath.includes("$")) {
+      // Try the tail after the variable; common case: $MYSQL_TMP_DIR/file
+      const root = findMysqlTestRoot(currentFile);
+      const tail = rawPath.replace(/^\$\w+\/?/, "");
+      if (tail && root) {
+        return path.join(root, tail);
+      }
+      return undefined;
+    }
+
+    const normalized = rawPath.replace(/\\/g, "/");
+    if (normalized.startsWith("./") || normalized.startsWith("../")) {
+      return path.resolve(path.dirname(currentFile), normalized);
+    }
+    if (path.isAbsolute(normalized)) {
+      return normalized;
+    }
+
+    // mysql-test root-relative
+    const root = findMysqlTestRoot(currentFile);
+    return root ? path.join(root, normalized) : undefined;
   }
 }

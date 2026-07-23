@@ -5,51 +5,53 @@ import {
   pairTestResult,
   pairOptTest,
   pairCnfTest,
-  resolveIncPath,
 } from "../utils/test-file";
+import { resolveIncPathString } from "../utils/path-utils";
+import { astCache } from "../ast/ast-cache";
 import {
-  findVariableDeclarationInLines,
-  getVariableAtPosition,
-} from "./variable-logic";
+  findStatementAtOffset,
+  findVariableDeclaration,
+  sourcePath,
+} from "../ast/ast-query";
 import { findMysqlTestRoot } from "../utils/path-utils";
 
 export class MtrDefinitionProvider implements vscode.DefinitionProvider {
-  provideDefinition(
+  async provideDefinition(
     document: vscode.TextDocument,
     position: vscode.Position,
     _token: vscode.CancellationToken
-  ): vscode.ProviderResult<vscode.Definition> {
-    const line = document.lineAt(position.line).text;
+  ): Promise<vscode.Definition | undefined> {
+    const offset = document.offsetAt(position);
+    const statements = await astCache.get(document);
+    const stmt = findStatementAtOffset(statements, offset);
 
-    // --source / --include: jump to .inc file
-    const sourceMatch = line.match(
-      /^\s*--\s*(?:source|include)\s+(\S+)/
-    );
-    if (sourceMatch) {
-      const incPath = sourceMatch[1];
-      const uri = resolveIncPath(document.uri.fsPath, incPath);
-      if (uri) {
+    // --source / --include: jump to the referenced file
+    if (stmt && typeof stmt === "object" && "Source" in stmt) {
+      const incPath = sourcePath(stmt.Source);
+      const resolved = resolveIncPathString(document.uri.fsPath, incPath);
+      if (resolved) {
         return [
           new vscode.Location(
-            uri,
+            vscode.Uri.file(resolved),
             new vscode.Position(0, 0)
           ),
         ];
       }
     }
 
-    // $variable: try to find --let declaration
-    const varName = getVariableAtPosition(
-      line,
-      position.character
-    );
+    // $variable: jump to its --let declaration in this file
+    const line = document.lineAt(position.line).text;
+    const varName = variableAtPosition(line, position.character);
     if (varName) {
-      const declLocation = findVariableDeclaration(
-        document,
-        varName
-      );
-      if (declLocation) {
-        return declLocation;
+      const decl = findVariableDeclaration(statements, varName);
+      if (decl) {
+        // Convert byte offset → Position
+        const declPos = document.positionAt(decl.span.offset);
+        const declEnd = document.positionAt(decl.span.offset + decl.span.len);
+        return new vscode.Location(
+          document.uri,
+          new vscode.Range(declPos, declEnd)
+        );
       }
     }
 
@@ -57,23 +59,22 @@ export class MtrDefinitionProvider implements vscode.DefinitionProvider {
   }
 }
 
-function findVariableDeclaration(
-  document: vscode.TextDocument,
-  varName: string
-): vscode.Location | undefined {
-  const lines: string[] = [];
-  for (let i = 0; i < document.lineCount; i++) {
-    lines.push(document.lineAt(i).text);
-  }
-  const decl = findVariableDeclarationInLines(lines, varName);
-  if (decl) {
-    return new vscode.Location(
-      document.uri,
-      new vscode.Range(
-        new vscode.Position(decl.lineIndex, decl.startCol),
-        new vscode.Position(decl.lineIndex, decl.endCol)
-      )
-    );
+/**
+ * Return the variable name under the cursor (without $), if any.
+ * Token-level detection via regex — sufficient for cursor hit-testing.
+ */
+function variableAtPosition(
+  line: string,
+  column: number
+): string | undefined {
+  const re = /\$([A-Za-z_][A-Za-z0-9_]*)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(line)) !== null) {
+    const start = m.index;
+    const end = start + m[0].length;
+    if (column >= start && column <= end) {
+      return m[1];
+    }
   }
   return undefined;
 }

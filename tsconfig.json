@@ -3,7 +3,7 @@
     "module": "ESNext",
     "target": "ESNext",
     "outDir": "out",
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM"],
     "sourceMap": true,
     "rootDir": "src",
     "strict": true,

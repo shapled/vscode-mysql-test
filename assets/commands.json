@@ -1,0 +1,492 @@
+{
+  "mysql": {
+    "append_file": {
+      "description": "Append text to a file.",
+      "summary": "Append text to a file."
+    },
+    "cat_file": {
+      "description": "Display file contents in output.",
+      "summary": "Display file contents in output."
+    },
+    "change_user": {
+      "description": "Change the user for the connection. Optionally set character_set charset_name to change the default character set (initially latin1).",
+      "summary": "Change the user for the connection."
+    },
+    "character_set": {
+      "description": "Set the character set for the connection.",
+      "summary": "Set the character set for the connection."
+    },
+    "chmod": {
+      "description": "Change file permissions.",
+      "summary": "Change file permissions."
+    },
+    "connect": {
+      "description": "Connect to the server with given parameters.",
+      "summary": "Connect to the server with given parameters."
+    },
+    "connection": {
+      "description": "Switch connection context to a named connection.",
+      "summary": "Switch connection context to a named connection."
+    },
+    "copy_file": {
+      "description": "Copy a file. Also see copy_files_wildcard for wildcard-based bulk copies.",
+      "summary": "Copy a file."
+    },
+    "dec": {
+      "description": "Decrement a numeric mysqltest variable.",
+      "summary": "Decrement a numeric mysqltest variable."
+    },
+    "delimiter": {
+      "description": "Change the statement delimiter.",
+      "summary": "Change the statement delimiter."
+    },
+    "die": {
+      "description": "Abort the test with an error message.",
+      "summary": "Abort the test with an error message."
+    },
+    "diff_files": {
+      "description": "Compare two files. The command succeeds if the files are the same, and fails if they are different or either file does not exist. File name arguments are subject to variable substitution.",
+      "summary": "Compare two files."
+    },
+    "dirty_close": {
+      "description": "Close the named connection, calling vio_delete() before closing. Like disconnect but more forceful. If the connection is the current connection, switch to a different connection before executing further SQL statements.",
+      "summary": "Forcefully close a named connection."
+    },
+    "disable_connect_log": {
+      "description": "Disable connection logging.",
+      "summary": "Disable connection logging."
+    },
+    "disable_info": {
+      "description": "Disable info output.",
+      "summary": "Disable info output."
+    },
+    "disable_metadata": {
+      "description": "Disable metadata output.",
+      "summary": "Disable metadata output."
+    },
+    "disable_parsing": {
+      "description": "Disable command parsing (treat as raw text).",
+      "summary": "Disable command parsing (treat as raw text).",
+      "removed_in": "8.0"
+    },
+    "disable_ps_protocol": {
+      "description": "Disable prepared statement protocol.",
+      "summary": "Disable prepared statement protocol."
+    },
+    "disable_query_log": {
+      "description": "Disable query logging to result file.",
+      "summary": "Disable query logging to result file."
+    },
+    "disable_reconnect": {
+      "description": "Disable automatic reconnection. Applies only to the current connection.",
+      "summary": "Disable automatic reconnection."
+    },
+    "disable_result_log": {
+      "description": "Disable result logging to result file.",
+      "summary": "Disable result logging to result file."
+    },
+    "disable_session_track_info": {
+      "description": "Disable session track info output.",
+      "summary": "Disable session track info output."
+    },
+    "disable_warnings": {
+      "description": "Disable warnings in result output. Can take an optional ONCE argument to disable warnings for the next statement only.",
+      "summary": "Disable warnings in result output."
+    },
+    "disconnect": {
+      "description": "Disconnect a named connection.",
+      "summary": "Disconnect a named connection."
+    },
+    "echo": {
+      "description": "Print text to output.",
+      "summary": "Print text to output."
+    },
+    "enable_connect_log": {
+      "description": "Enable connection logging.",
+      "summary": "Enable connection logging."
+    },
+    "enable_info": {
+      "description": "Enable info output.",
+      "summary": "Enable info output."
+    },
+    "enable_metadata": {
+      "description": "Enable metadata output.",
+      "summary": "Enable metadata output."
+    },
+    "enable_parsing": {
+      "description": "Enable command parsing.",
+      "summary": "Enable command parsing.",
+      "removed_in": "8.0"
+    },
+    "enable_ps_protocol": {
+      "description": "Enable prepared statement protocol.",
+      "summary": "Enable prepared statement protocol."
+    },
+    "enable_query_log": {
+      "description": "Enable query logging to result file.",
+      "summary": "Enable query logging to result file."
+    },
+    "enable_reconnect": {
+      "description": "Enable automatic reconnection. Applies only to the current connection.",
+      "summary": "Enable automatic reconnection."
+    },
+    "enable_result_log": {
+      "description": "Enable result logging to result file.",
+      "summary": "Enable result logging to result file."
+    },
+    "enable_session_track_info": {
+      "description": "Enable session track info output.",
+      "summary": "Enable session track info output."
+    },
+    "enable_warnings": {
+      "description": "Enable warnings in result output. Can take an optional ONCE argument to enable warnings for the next statement only.",
+      "summary": "Enable warnings in result output."
+    },
+    "end": {
+      "description": "End a while loop.",
+      "summary": "End a while loop."
+    },
+    "error": {
+      "description": "Expect an error from the next statement.",
+      "summary": "Expect an error from the next statement."
+    },
+    "eval": {
+      "description": "Evaluate the query after variable substitution.",
+      "summary": "Evaluate the query after variable substitution."
+    },
+    "exec": {
+      "description": "Execute a system command and return its output. Prefer portable file commands (remove_file, chmod, mkdir, etc.) over exec for file system operations.",
+      "summary": "Execute a system command and return its output."
+    },
+    "exec_in_background": {
+      "description": "Execute a system command in background using popen(). mysqltest does not wait for completion or read output.",
+      "summary": "Execute a system command in background."
+    },
+    "execw": {
+      "description": "Execute a system command without checking return code. Variant of exec needed on Windows for non-ASCII command lines; identical on other platforms.",
+      "summary": "Execute a system command without checking return code."
+    },
+    "exit": {
+      "description": "End the test and compare results. Considered normal termination; not necessary at end of test file.",
+      "summary": "End the test and compare results."
+    },
+    "expr": {
+      "description": "Evaluate an expression and assign the result to a variable. Supports +, -, *, /, %, &&, ||, &, |, ^, <<, >>. Non-integer operands are truncated to integer values.",
+      "summary": "Evaluate expression and assign result to variable."
+    },
+    "file_exists": {
+      "description": "Check if a file exists.",
+      "summary": "Check if a file exists."
+    },
+    "force-cpdir": {
+      "description": "Recursively copy a directory. Returns 0 for success and 1 for failure.",
+      "summary": "Recursively copy a directory."
+    },
+    "force-rmdir": {
+      "description": "Remove a directory and all its contents.",
+      "summary": "Remove a directory and all its contents."
+    },
+    "horizontal_results": {
+      "description": "Set the default query result display format to horizontal (tabular). Initially, the default is horizontal.",
+      "summary": "Display results in tabular format."
+    },
+    "if": {
+      "description": "Begin a conditional block.",
+      "summary": "Begin a conditional block."
+    },
+    "inc": {
+      "description": "Increment a numeric mysqltest variable.",
+      "summary": "Increment a numeric mysqltest variable."
+    },
+    "let": {
+      "description": "Assign a value to a mysqltest variable.",
+      "summary": "Assign a value to a mysqltest variable."
+    },
+    "list_files": {
+      "description": "List files in a directory. If a pattern is given, list only files matching the pattern (supports wildcards).",
+      "summary": "List files in a directory."
+    },
+    "list_files_append_file": {
+      "description": "List files matching a pattern in a directory and append results to a file.",
+      "summary": "List matching files and append to a file."
+    },
+    "list_files_write_file": {
+      "description": "List files matching a pattern in a directory and write results to a file.",
+      "summary": "List matching files and write to a file."
+    },
+    "lowercase_result": {
+      "description": "Lowercase the result before comparing.",
+      "summary": "Lowercase the result before comparing."
+    },
+    "mkdir": {
+      "description": "Create a directory. Returns 0 for success and 1 for failure.",
+      "summary": "Create a directory."
+    },
+    "move_file": {
+      "description": "Move/rename a file.",
+      "summary": "Move/rename a file."
+    },
+    "output": {
+      "description": "Redirect query output to a file.",
+      "summary": "Redirect query output to a file."
+    },
+    "partially_sorted_result": {
+      "description": "Sort the result set, leaving the first num_columns columns unsorted.",
+      "summary": "Sort result set with first N columns unsorted."
+    },
+    "perl": {
+      "description": "Execute a Perl script block.",
+      "summary": "Execute a Perl script block."
+    },
+    "ping": {
+      "description": "Send a ping to the server to check connectivity.",
+      "summary": "Ping the server to check connectivity."
+    },
+    "query": {
+      "description": "Execute a SQL query and check the result.",
+      "summary": "Execute a SQL query and check the result."
+    },
+    "query_attributes": {
+      "description": "Send attributes with the next query statement.",
+      "summary": "Send attributes with the next query statement."
+    },
+    "query_horizontal": {
+      "description": "Display next query result in tabular format. Alias for horizontal_results.",
+      "summary": "Display next query result in tabular format."
+    },
+    "query_vertical": {
+      "description": "Display next query result in vertical format.",
+      "summary": "Display next query result in vertical format."
+    },
+    "real_sleep": {
+      "description": "Sleep without the time scaling factor.",
+      "summary": "Sleep without the time scaling factor.",
+      "removed_in": "8.0"
+    },
+    "reap": {
+      "description": "Reap the result of a previously sent statement. You should not use reap unless a statement has been sent with send.",
+      "summary": "Reap the result of a previously sent statement."
+    },
+    "remove_file": {
+      "description": "Remove a file.",
+      "summary": "Remove a file."
+    },
+    "remove_files_wildcard": {
+      "description": "Remove files matching a wildcard pattern.",
+      "summary": "Remove files matching a wildcard pattern."
+    },
+    "replace_column": {
+      "description": "Replace column values with other values.",
+      "summary": "Replace column values with other values."
+    },
+    "replace_numeric_round": {
+      "description": "Round numeric values in result.",
+      "summary": "Round numeric values in result."
+    },
+    "replace_regex": {
+      "description": "Replace result using regular expressions. Uses /pattern/replacement/ syntax with optional i modifier for case-insensitive matching. Supports ECMAScript regex syntax with parenthesized substring references (\\1, \\2, etc.) in replacement strings. Multiple pattern/replacement pairs may be given.",
+      "summary": "Replace result using regular expressions."
+    },
+    "replace_result": {
+      "description": "Replace strings in result with other strings.",
+      "summary": "Replace strings in result with other strings."
+    },
+    "require": {
+      "description": "Specify requirements for the test.",
+      "summary": "Specify requirements for the test.",
+      "removed_in": "8.0"
+    },
+    "reset_connection": {
+      "description": "Reset the connection state by calling mysql_reset_connection().",
+      "summary": "Reset the connection."
+    },
+    "result_format": {
+      "description": "Set the result format version.",
+      "summary": "Set the result format version."
+    },
+    "rmdir": {
+      "description": "Remove a directory. Fails if the directory contains files or subdirectories; use force-rmdir for recursive removal.",
+      "summary": "Remove a directory."
+    },
+    "save_master_pos": {
+      "description": "For a master replication server, save the current binary log file name and position.",
+      "summary": "Save current binary log coordinates on master."
+    },
+    "send": {
+      "description": "Send a statement to the server without reaping.",
+      "summary": "Send a statement to the server without reaping."
+    },
+    "send_eval": {
+      "description": "Evaluate and send a statement without reaping. Combination of send and eval: performs variable replacement then behaves like send.",
+      "summary": "Evaluate and send a statement without reaping."
+    },
+    "send_quit": {
+      "description": "Send a QUIT message to the server.",
+      "summary": "Send a QUIT message to the server."
+    },
+    "send_shutdown": {
+      "description": "Send a SHUTDOWN message to the server without waiting for completion.",
+      "summary": "Send a SHUTDOWN message to the server."
+    },
+    "shutdown_server": {
+      "description": "Shut down the server.",
+      "summary": "Shut down the server."
+    },
+    "skip": {
+      "description": "Skip the rest of the test if condition is met.",
+      "summary": "Skip the rest of the test if condition is met."
+    },
+    "sleep": {
+      "description": "Sleep for the specified number of seconds. Try not to use sleep more than necessary to keep the test suite fast.",
+      "summary": "Sleep for the specified number of seconds."
+    },
+    "sorted_result": {
+      "description": "Sort the result set before comparing. Functionally equal to partially_sorted_result 0.",
+      "summary": "Sort the result set before comparing."
+    },
+    "source": {
+      "description": "Read and execute test commands from a file.",
+      "summary": "Read and execute test commands from a file."
+    },
+    "sync_slave_with_master": {
+      "description": "Sync slave with master. Saves master binary log coordinates, switches to slave, and waits until it catches up. Implicitly changes the current connection.",
+      "summary": "Sync slave with master."
+    },
+    "sync_with_master": {
+      "description": "Wait for the slave to catch up to the saved master position.",
+      "summary": "Wait for slave to catch up with saved master position."
+    },
+    "system": {
+      "description": "Execute a system command.",
+      "summary": "Execute a system command.",
+      "removed_in": "8.0"
+    },
+    "vertical_results": {
+      "description": "Set the default query result display format to vertical. Initially, the default is horizontal.",
+      "summary": "Display results in vertical format."
+    },
+    "wait_for_slave_to_stop": {
+      "description": "Wait until the slave SQL thread stops.",
+      "summary": "Wait until the slave SQL thread stops."
+    },
+    "while": {
+      "description": "Begin a while loop.",
+      "summary": "Begin a while loop."
+    },
+    "write_file": {
+      "description": "Write text to a file.",
+      "summary": "Write text to a file."
+    },
+    "write_line": {
+      "description": "Append a line of text to a file.",
+      "summary": "Append a line of text to a file."
+    },
+    "assert": {
+      "description": "Assert that expr is true; otherwise terminate the test with an error. expr is parsed as for if() and while(). Examples: assert(1); assert($x); assert(!$x); assert(`select count(*) from t1`);",
+      "summary": "Assert an expression is true or abort the test.",
+      "since": "8.0"
+    },
+    "disable_async_client": {
+      "description": "Disable or enable the asynchronous client protocol.",
+      "summary": "Disable or enable asynchronous client protocol."
+    }
+  },
+  "mariadb": {
+    "disable_prepare_warnings": {
+      "description": "Disable warnings from PREPARE statements.",
+      "summary": "Disable warnings from PREPARE statements."
+    },
+    "enable_prepare_warnings": {
+      "description": "Enable warnings from PREPARE statements.",
+      "summary": "Enable warnings from PREPARE statements."
+    },
+    "disable_cursor_protocol": {
+      "description": "Disable cursor protocol for statement execution.",
+      "summary": "Disable cursor protocol for statement execution."
+    },
+    "enable_cursor_protocol": {
+      "description": "Enable cursor protocol for statement execution.",
+      "summary": "Enable cursor protocol for statement execution."
+    },
+    "disable_non_blocking_api": {
+      "description": "Disable non-blocking API for statement execution.",
+      "summary": "Disable non-blocking API for statement execution."
+    },
+    "enable_non_blocking_api": {
+      "description": "Enable non-blocking API for statement execution.",
+      "summary": "Enable non-blocking API for statement execution."
+    },
+    "disable_ps2_protocol": {
+      "description": "Disable PS-2 protocol variant.",
+      "summary": "Disable PS-2 protocol variant."
+    },
+    "enable_ps2_protocol": {
+      "description": "Enable PS-2 protocol variant.",
+      "summary": "Enable PS-2 protocol variant."
+    },
+    "disable_service_connection": {
+      "description": "Disable service-level connection.",
+      "summary": "Disable service-level connection."
+    },
+    "enable_service_connection": {
+      "description": "Enable service-level connection.",
+      "summary": "Enable service-level connection."
+    },
+    "disable_view_protocol": {
+      "description": "Disable view protocol.",
+      "summary": "Disable view protocol."
+    },
+    "enable_view_protocol": {
+      "description": "Enable view protocol.",
+      "summary": "Enable view protocol."
+    },
+    "disable_column_names": {
+      "description": "Disable column names in result output.",
+      "summary": "Disable column names in result output."
+    },
+    "enable_column_names": {
+      "description": "Enable column names in result output.",
+      "summary": "Enable column names in result output."
+    },
+    "disable_abort_on_error": {
+      "description": "Disable abort-on-error behavior.",
+      "summary": "Disable abort-on-error behavior."
+    },
+    "enable_abort_on_error": {
+      "description": "Enable abort-on-error behavior.",
+      "summary": "Enable abort-on-error behavior."
+    },
+    "ps_prepare": {
+      "description": "--PS_prepare stmt\nPrepare a SQL statement for later execution. Used in Galera cluster tests.",
+      "summary": "Prepare a SQL statement for later execution (Galera)."
+    },
+    "ps_bind": {
+      "description": "--PS_bind name\nBind a named parameter value to the current prepared statement.",
+      "summary": "Bind a named parameter to the current prepared statement (Galera)."
+    },
+    "ps_execute": {
+      "description": "--PS_execute\nExecute the current prepared statement.",
+      "summary": "Execute the current prepared statement (Galera)."
+    },
+    "ps_close": {
+      "description": "--PS_close\nClose the current prepared statement.",
+      "summary": "Close the current prepared statement (Galera)."
+    },
+    "optimizer_trace": {
+      "description": "--optimizer_trace\nEnable optimizer trace for the next statement, then display trace output.",
+      "summary": "Enable optimizer trace for the next statement and display results."
+    },
+    "skip_if_hypergraph": {
+      "description": "--skip_if_hypergraph [message]\nSkip the test if the hypergraph optimizer is active.",
+      "summary": "Skip the test if hypergraph optimizer is active."
+    },
+    "write_line": {
+      "description": "write_line text file;\nAppend a line of text to a file.",
+      "summary": "Append a line of text to a file."
+    },
+    "evalp": {
+      "description": "evalp $stmt;\nPrepare, execute, and deallocate a prepared statement. MariaDB equivalent of eval for PS.",
+      "summary": "Prepare-execute-deallocate shorthand (MariaDB)."
+    }
+  }
+}
