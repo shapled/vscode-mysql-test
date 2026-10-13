@@ -429,6 +429,23 @@
             { "include": "#mtr-variables" },
             { "include": "#sql" }
           ]
+        },
+        {
+          "comment": "escape(CHARACTERS, TEXT): mysqltest scans TEXT to the end and backs up one char for the closing paren, so any ')' before the last one is an ARGUMENT. The arguments carry meta.escape.arguments, which contributes.grammars excludes from bracket pairing via unbalancedBracketScopes — the '(' and the final ')' still pair correctly.",
+          "contentName": "meta.escape.arguments.mysql-test",
+          "begin": "\\b(escape)\\s*(\\()",
+          "end": "\\)(?=[^)]*$)|(?=#)|$",
+          "beginCaptures": {
+            "1": { "name": "entity.name.function.mtr.mysql-test" },
+            "2": { "name": "punctuation.definition.arguments.begin.mtr.mysql-test" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.arguments.end.mtr.mysql-test" }
+          },
+          "patterns": [
+            { "include": "#mtr-variables" },
+            { "include": "#strings" }
+          ]
         }
       ]
     },

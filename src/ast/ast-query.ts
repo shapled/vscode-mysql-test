@@ -1,28 +1,62 @@
 import * as vscode from "vscode";
+import {
+  DashCommand,
+  Source,
+  Let,
+  If,
+  While,
+  WriteFile,
+  AppendFile,
+  RemoveFile,
+  CatFile,
+  Mkdir,
+  Rmdir,
+  FileExists,
+  CopyFile,
+  MoveFile,
+  DiffFiles,
+  Chmod,
+} from "@shapled/mtparser/ast";
 import type {
-  Statement,
-  Span,
-  SourceCmd,
-  LetCmd,
-} from "@shapled/mtparser";
+  Span$ as Span,
+  Statement$ as Statement,
+  InterpolatedText,
+} from "@shapled/mtparser/ast";
 import {
   statementSpan,
   interpolatedToRaw,
   interpolatedVariables,
 } from "./helpers";
 
-/** Statement variants that are objects (excludes the "Empty" string variant). */
-type ObjectStatement = Exclude<Statement, "Empty">;
-
-/** Type guard: is this statement an object variant (not "Empty")? */
-function isObjectStmt(s: Statement): s is ObjectStatement {
-  return typeof s === "object";
-}
-
 /**
  * AST query helpers. Pure functions over Statement[] — no vscode dependency
  * except where a Position/Range is needed for the public API.
+ *
+ * mtparser 0.4 wraps `--` prefixed commands in a DashCommand node; queries
+ * unwrap it so callers always see the inner command (Source, Let, ...).
  */
+
+/** Unwrap `--` prefixed commands to the inner command statement. */
+export function unwrapStatement(stmt: Statement): Statement {
+  return stmt instanceof DashCommand ? stmt.statement : stmt;
+}
+
+/**
+ * Walk every statement in document order, unwrapping `--` commands and
+ * recursing into If/While bodies. Block statements themselves are yielded
+ * before their children.
+ */
+export function* walkStatements(
+  statements: Statement[]
+): Generator<Statement> {
+  for (const top of statements) {
+    const stmt = unwrapStatement(top);
+    yield stmt;
+    if (stmt instanceof If || stmt instanceof While) {
+      yield* walkStatements([...stmt.body]);
+    }
+  }
+}
 
 /** Convert a (line, column) cursor to a byte offset in the document text. */
 export function offsetAt(
@@ -37,33 +71,46 @@ export function spanContains(span: Span, offset: number): boolean {
   return offset >= span.offset && offset < span.offset + span.len;
 }
 
-/** Find the statement containing the given byte offset, if any. */
+/**
+ * Find the innermost statement containing the given byte offset, if any.
+ * Statements nested in If/While bodies take precedence over their enclosing
+ * block (whose span covers the whole block).
+ */
 export function findStatementAtOffset(
   statements: Statement[],
   offset: number
 ): Statement | undefined {
-  return statements.find((s) => spanContains(statementSpan(s), offset));
+  for (const top of statements) {
+    const stmt = unwrapStatement(top);
+    if (!spanContains(statementSpan(top), offset)) continue;
+    if (stmt instanceof If || stmt instanceof While) {
+      return findStatementAtOffset([...stmt.body], offset) ?? stmt;
+    }
+    return stmt;
+  }
+  return undefined;
 }
 
 // ── Source / include commands ────────────────────────────
 
-/** Return all Source statements in the AST, in order. */
+/** Return all Source statements in the AST (incl. If/While bodies), in order. */
 export function findSourceCommands(
   statements: Statement[]
-): SourceCmd[] {
-  return statements
-    .filter(isObjectStmt)
-    .filter((s): s is { Source: SourceCmd } => "Source" in s)
-    .map((s) => s.Source);
+): Source[] {
+  const sources: Source[] = [];
+  for (const stmt of walkStatements(statements)) {
+    if (stmt instanceof Source) sources.push(stmt);
+  }
+  return sources;
 }
 
 /** Get the raw file path from a Source command (resolving $variables). */
-export function sourcePath(cmd: SourceCmd): string {
+export function sourcePath(cmd: Source): string {
   return interpolatedToRaw(cmd.file);
 }
 
 /** Check if a Source command's path contains a $variable reference. */
-export function sourceHasVariables(cmd: SourceCmd): boolean {
+export function sourceHasVariables(cmd: Source): boolean {
   return interpolatedVariables(cmd.file).length > 0;
 }
 
@@ -73,20 +120,19 @@ export function sourceHasVariables(cmd: SourceCmd): boolean {
 export function findVariableDeclaration(
   statements: Statement[],
   variableName: string
-): LetCmd | undefined {
-  return statements
-    .filter(isObjectStmt)
-    .filter((s): s is { Let: LetCmd } => "Let" in s)
-    .map((s) => s.Let)
-    .find((cmd) => cmd.variable === variableName);
+): Let | undefined {
+  return findAllDeclarations(statements).find(
+    (cmd) => cmd.variable === variableName
+  );
 }
 
-/** All variable declarations in the AST, in source order. */
-export function findAllDeclarations(statements: Statement[]): LetCmd[] {
-  return statements
-    .filter(isObjectStmt)
-    .filter((s): s is { Let: LetCmd } => "Let" in s)
-    .map((s) => s.Let);
+/** All variable declarations in the AST (incl. If/While bodies), in source order. */
+export function findAllDeclarations(statements: Statement[]): Let[] {
+  const decls: Let[] = [];
+  for (const stmt of walkStatements(statements)) {
+    if (stmt instanceof Let) decls.push(stmt);
+  }
+  return decls;
 }
 
 /** A variable occurrence: either a declaration (write) or a reference (read). */
@@ -104,13 +150,11 @@ export interface VariableOccurrence {
 /**
  * Find all occurrences of a variable name across the AST.
  *
- * Scans --let declarations, --inc/--dec targets, and $var references
- * embedded in InterpolatedText (echo, source, let values, etc.).
- *
- * NOTE: Span granularity is statement-level, not token-level. To get exact
- * $var positions within a statement, this re-scans the statement's source
- * text for the literal `$name` pattern. This is a pragmatic tradeoff until
- * mtparser exposes finer-grained spans.
+ * --let declarations use the exact `variable_span` from the AST; other
+ * references ($var in echo/source/let values, if/while conditions, ...) are
+ * located by scanning the statement's source text for the literal `$name`
+ * pattern. If/While blocks scan only their header (condition) — the body is
+ * visited recursively, so nested occurrences aren't counted twice.
  */
 export function findVariableOccurrences(
   statements: Statement[],
@@ -118,52 +162,85 @@ export function findVariableOccurrences(
   sourceText: string
 ): VariableOccurrence[] {
   const results: VariableOccurrence[] = [];
+  collectOccurrences(statements, variableName, sourceText, results);
+  return results;
+}
+
+function collectOccurrences(
+  statements: Statement[],
+  variableName: string,
+  sourceText: string,
+  results: VariableOccurrence[]
+): void {
   const needle = `$${variableName}`;
 
-  for (const stmt of statements) {
-    if (!isObjectStmt(stmt)) continue;
-    const span = statementSpan(stmt);
+  for (const top of statements) {
+    const stmt = unwrapStatement(top);
+    const span = statementSpan(top); // covers the full command incl. `--`
 
-    // --let declaration: LHS variable is the declaration site
-    if ("Let" in stmt) {
-      const cmd = stmt.Let;
-      if (cmd.variable === variableName) {
-        // The declaration's $name sits right after "--let " — approximate
-        // its offset by scanning the statement's source text.
-        const stmtText = sourceText.substring(span.offset, span.offset + span.len);
-        const rel = stmtText.indexOf(needle);
-        if (rel >= 0) {
-          results.push({
-            offset: span.offset + rel,
-            length: needle.length,
-            name: variableName,
-            isDeclaration: true,
-          });
-          continue;
-        }
+    // --let declaration: exact span of the LHS `$name` token
+    if (stmt instanceof Let && stmt.variable === variableName) {
+      if (stmt.variable_span.len > 0) {
+        results.push({
+          offset: stmt.variable_span.offset,
+          length: stmt.variable_span.len,
+          name: variableName,
+          isDeclaration: true,
+        });
+        // The general scan below would find the same token again — skip it.
+        continue;
       }
     }
 
-    // For all statements: scan interpolated text + body for the variable.
-    // This catches echo $x, source $VAR/path, let $y = $x, etc.
-    const stmtText = sourceText.substring(span.offset, span.offset + span.len);
-    let searchFrom = 0;
-    while (true) {
-      const rel = stmtText.indexOf(needle, searchFrom);
-      if (rel < 0) break;
-      // Skip if it's the declaration LHS (already handled above)
-      const isDecl = "Let" in stmt && stmt.Let.variable === variableName && rel < stmtText.indexOf("=") ;
-      results.push({
-        offset: span.offset + rel,
-        length: needle.length,
-        name: variableName,
-        isDeclaration: !!isDecl,
-      });
-      searchFrom = rel + needle.length;
+    // If/While: scan only the header (`while (cond) {`); recurse into body.
+    if (stmt instanceof If || stmt instanceof While) {
+      const headerEnd = stmt.open_brace.offset + Math.max(stmt.open_brace.len, 0);
+      scanRange(
+        sourceText,
+        span.offset,
+        Math.max(headerEnd, span.offset),
+        needle,
+        variableName,
+        results
+      );
+      collectOccurrences([...stmt.body], variableName, sourceText, results);
+      continue;
     }
-  }
 
-  return results;
+    // For all other statements: scan interpolated text + body for the
+    // variable (echo $x, source $VAR/path, let $y = $x, ...).
+    scanRange(
+      sourceText,
+      span.offset,
+      span.offset + span.len,
+      needle,
+      variableName,
+      results
+    );
+  }
+}
+
+function scanRange(
+  sourceText: string,
+  start: number,
+  end: number,
+  needle: string,
+  variableName: string,
+  results: VariableOccurrence[]
+): void {
+  const region = sourceText.substring(start, end);
+  let searchFrom = 0;
+  while (true) {
+    const rel = region.indexOf(needle, searchFrom);
+    if (rel < 0) break;
+    results.push({
+      offset: start + rel,
+      length: needle.length,
+      name: variableName,
+      isDeclaration: false,
+    });
+    searchFrom = rel + needle.length;
+  }
 }
 
 // ── File I/O commands ────────────────────────────────────
@@ -183,122 +260,71 @@ export interface FilePathRef {
 /**
  * Extract all file paths from File I/O commands.
  *
- * @param statements - parsed AST
- * @param sourceText - the original document text, used to compute precise
- *   path-token spans (the AST only gives statement-level spans).
+ * Path token spans come straight from the AST's TextPart spans (exact),
+ * so no source-text re-scanning is needed.
  */
-export function findFilePaths(
-  statements: Statement[],
-  sourceText: string
-): FilePathRef[] {
+export function findFilePaths(statements: Statement[]): FilePathRef[] {
   const refs: FilePathRef[] = [];
 
-  for (const stmt of statements) {
-    if (!isObjectStmt(stmt)) continue;
-    const span = statementSpan(stmt);
-    const stmtText = sourceText.substring(span.offset, span.offset + span.len);
+  for (const top of statements) {
+    const stmt = unwrapStatement(top);
 
-    if ("Source" in stmt) {
-      pushRef(refs, span, stmtText, interpolatedToRaw(stmt.Source.file));
-    } else if ("WriteFile" in stmt) {
-      pushRef(refs, span, stmtText, interpolatedToRaw(stmt.WriteFile.filename));
-    } else if ("AppendFile" in stmt) {
-      pushRef(refs, span, stmtText, interpolatedToRaw(stmt.AppendFile.filename));
-    } else if ("RemoveFile" in stmt) {
-      pushRef(refs, span, stmtText, interpolatedToRaw(stmt.RemoveFile.file));
-    } else if ("CatFile" in stmt) {
-      pushRef(refs, span, stmtText, interpolatedToRaw(stmt.CatFile.file));
-    } else if ("Mkdir" in stmt) {
-      pushRef(refs, span, stmtText, interpolatedToRaw(stmt.Mkdir.dir));
-    } else if ("Rmdir" in stmt) {
-      pushRef(refs, span, stmtText, interpolatedToRaw(stmt.Rmdir.dir));
-    } else if ("FileExists" in stmt) {
-      pushRef(refs, span, stmtText, interpolatedToRaw(stmt.FileExists.file));
-    } else if ("CopyFile" in stmt) {
-      pushTwoRefs(refs, span, stmtText, [
-        interpolatedToRaw(stmt.CopyFile.source),
-        interpolatedToRaw(stmt.CopyFile.dest),
-      ]);
-    } else if ("MoveFile" in stmt) {
-      pushTwoRefs(refs, span, stmtText, [
-        interpolatedToRaw(stmt.MoveFile.source),
-        interpolatedToRaw(stmt.MoveFile.dest),
-      ]);
-    } else if ("DiffFiles" in stmt) {
-      pushTwoRefs(refs, span, stmtText, [
-        interpolatedToRaw(stmt.DiffFiles.file1),
-        interpolatedToRaw(stmt.DiffFiles.file2),
-      ]);
-    } else if ("Chmod" in stmt) {
-      pushRef(refs, span, stmtText, interpolatedToRaw(stmt.Chmod.file));
+    if (stmt instanceof Source) {
+      pushRef(refs, stmt.file);
+    } else if (stmt instanceof WriteFile) {
+      pushRef(refs, stmt.filename);
+    } else if (stmt instanceof AppendFile) {
+      pushRef(refs, stmt.filename);
+    } else if (stmt instanceof RemoveFile) {
+      pushRef(refs, stmt.file);
+    } else if (stmt instanceof CatFile) {
+      pushRef(refs, stmt.file);
+    } else if (stmt instanceof Mkdir) {
+      pushRef(refs, stmt.dir);
+    } else if (stmt instanceof Rmdir) {
+      pushRef(refs, stmt.dir);
+    } else if (stmt instanceof FileExists) {
+      pushRef(refs, stmt.file);
+    } else if (stmt instanceof CopyFile) {
+      pushRef(refs, stmt.source);
+      pushRef(refs, stmt.dest);
+    } else if (stmt instanceof MoveFile) {
+      pushRef(refs, stmt.source);
+      pushRef(refs, stmt.dest);
+    } else if (stmt instanceof DiffFiles) {
+      pushRef(refs, stmt.file1);
+      pushRef(refs, stmt.file2);
+    } else if (stmt instanceof Chmod) {
+      pushRef(refs, stmt.file);
     }
   }
 
   return refs;
 }
 
-/** Regex matching a command prefix like `--source `, `write_file `, etc. */
-const CMD_PREFIX_RE = /^[ \t]*(?:--[ \t]*)?\S+[ \t]+/;
-
-/** Semicolon/whitespace terminator for path tokens. */
-const PATH_TAIL_RE = /(?=[ \t;]|$)/;
-
-/** Find the first non-whitespace path token after the command name. */
-function findFirstPathSpan(stmtText: string): { start: number; end: number } | undefined {
-  const prefix = stmtText.match(CMD_PREFIX_RE);
-  if (!prefix) return undefined;
-  const start = prefix[0].length;
-  const rest = stmtText.substring(start);
-  const endRel = rest.search(PATH_TAIL_RE);
-  if (endRel < 0) return undefined;
-  return { start, end: start + endRel };
+/** Span covering an interpolated-text argument (first part start → last part end). */
+function partsSpan(
+  parts: InterpolatedText
+): { offset: number; length: number } | undefined {
+  let first: Span | undefined;
+  let last: Span | undefined;
+  for (const part of parts) {
+    const sp = part.span;
+    if (!first) first = sp;
+    last = sp;
+  }
+  if (!first || !last) return undefined;
+  return { offset: first.offset, length: last.offset + last.len - first.offset };
 }
 
-function pushRef(
-  refs: FilePathRef[],
-  span: Span,
-  stmtText: string,
-  path: string
-): void {
-  const loc = findFirstPathSpan(stmtText);
-  if (!loc) return;
+function pushRef(refs: FilePathRef[], parts: InterpolatedText): void {
+  const loc = partsSpan(parts);
+  if (!loc || loc.length <= 0) return;
+  const path = interpolatedToRaw(parts);
   refs.push({
-    offset: span.offset + loc.start,
-    length: loc.end - loc.start,
+    offset: loc.offset,
+    length: loc.length,
     path,
-    hasVariables: path.includes("$"),
-  });
-}
-
-/** For commands with two path args (copy_file, move_file, diff_files). */
-function pushTwoRefs(
-  refs: FilePathRef[],
-  span: Span,
-  stmtText: string,
-  paths: [string, string]
-): void {
-  // First path: same as single-arg case
-  const first = findFirstPathSpan(stmtText);
-  if (!first) return;
-  refs.push({
-    offset: span.offset + first.start,
-    length: first.end - first.start,
-    path: paths[0],
-    hasVariables: paths[0].includes("$"),
-  });
-
-  // Second path: scan forward from end of first path
-  const afterFirst = stmtText.substring(first.end);
-  const wsMatch = afterFirst.match(/^[ \t]+/);
-  if (!wsMatch) return;
-  const secondStart = first.end + wsMatch[0].length;
-  const rest = stmtText.substring(secondStart);
-  const endRel = rest.search(PATH_TAIL_RE);
-  if (endRel < 0) return;
-  refs.push({
-    offset: span.offset + secondStart,
-    length: endRel,
-    path: paths[1],
-    hasVariables: paths[1].includes("$"),
+    hasVariables: interpolatedVariables(parts).length > 0,
   });
 }

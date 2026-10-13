@@ -1,5 +1,42 @@
-import type { Statement, InterpolatedText, Span, EndMarker } from "@shapled/mtparser";
-import { statementSpan } from "../ast/helpers";
+import {
+  Comment,
+  Sql,
+  DashCommand,
+  If,
+  While,
+  Source,
+  Echo,
+  Output,
+  Let,
+  Inc,
+  Dec,
+  WriteFile,
+  AppendFile,
+  RemoveFile,
+  CatFile,
+  Mkdir,
+  Rmdir,
+  FileExists,
+  CopyFile,
+  MoveFile,
+  DiffFiles,
+  Chmod,
+  Perl,
+  Expr,
+  Variable,
+  QueryGetValue,
+  QueryValue,
+  Text as LetText,
+  Escape,
+  ConvertError,
+} from "@shapled/mtparser/ast";
+import type {
+  Span$ as Span,
+  Statement$ as Statement,
+  InterpolatedText,
+  Marker$ as Marker,
+} from "@shapled/mtparser/ast";
+import { statementSpan, interpolatedToRaw } from "../ast/helpers";
 
 /**
  * Pure AST → token extraction. No vscode dependency.
@@ -68,37 +105,37 @@ function processStatement(
   source: string,
   tokens: RawToken[]
 ): void {
-  if (typeof stmt === "object" && "Comment" in stmt) {
-    const sp = stmt.Comment.span;
-    tokens.push({ offset: sp.offset, length: sp.len, type: T.comment, modifiers: 0 });
+  if (stmt instanceof Comment) {
+    tokens.push({ offset: stmt.span.offset, length: stmt.span.len, type: T.comment, modifiers: 0 });
     return;
   }
   // SQL statements are fully handled by TextMate's source.sql rules.
-  if (typeof stmt === "object" && "Sql" in stmt) return;
-  if (typeof stmt !== "object") return; // "Empty" string variant
+  if (stmt instanceof Sql) return;
 
+  // mtparser 0.4 wraps `--` prefixed commands in a DashCommand node whose
+  // span covers the full command (including the prefix) — the same region
+  // the statement span covered before 0.4.
+  const isDashCmd = stmt instanceof DashCommand;
+  const inner = isDashCmd ? stmt.statement : stmt;
   const span = statementSpan(stmt);
   const stmtText = source.substring(span.offset, span.offset + span.len);
 
-  // `--` prefix → operator
-  const dashIdx = stmtText.indexOf("--");
-  if (dashIdx >= 0 && dashIdx < 6) {
-    tokens.push({ offset: span.offset + dashIdx, length: 2, type: T.operator, modifiers: 0 });
+  // `--` prefix → operator (exact span from the AST)
+  if (isDashCmd) {
+    tokens.push({ offset: stmt.dash.offset, length: stmt.dash.len, type: T.operator, modifiers: 0 });
   }
 
   // Command terminator `;` (no-prefix commands only, not SQL) → operator.
-  if (!("Sql" in stmt)) {
-    const trimmed = stmtText.replace(/\n+$/, "");
-    if (trimmed.endsWith(";")) {
-      const semiRel = trimmed.length - 1;
-      tokens.push({ offset: span.offset + semiRel, length: 1, type: T.operator, modifiers: 0 });
-    }
+  const trimmed = stmtText.replace(/\n+$/, "");
+  if (trimmed.endsWith(";")) {
+    const semiRel = trimmed.length - 1;
+    tokens.push({ offset: span.offset + semiRel, length: 1, type: T.operator, modifiers: 0 });
   }
 
   // Command keyword (first identifier after optional `--`) → macro
   const cmdMatch = stmtText.match(/^[ \t]*(?:--[ \t]*)?([a-zA-Z_][a-zA-Z0-9_]*)/);
   if (cmdMatch) {
-    const nameRel = stmtText.indexOf(cmdMatch[1], dashIdx >= 0 ? dashIdx + 2 : 0);
+    const nameRel = stmtText.indexOf(cmdMatch[1], isDashCmd ? 2 : 0);
     if (nameRel >= 0) {
       tokens.push({
         offset: span.offset + nameRel,
@@ -111,72 +148,68 @@ function processStatement(
 
   // Recurse into If/While bodies — their nested statements need the same
   // token extraction (echo/die/let inside an if block, etc.).
-  if ("If" in stmt) {
-    pushBraceTokens(stmt.If, tokens);
-    for (const bodyStmt of stmt.If.body) {
-      processStatement(bodyStmt, source, tokens);
-    }
-  } else if ("While" in stmt) {
-    pushBraceTokens(stmt.While, tokens);
-    for (const bodyStmt of stmt.While.body) {
+  if (inner instanceof If || inner instanceof While) {
+    pushBraceTokens(inner.open_brace, inner.close_brace, tokens);
+    for (const bodyStmt of inner.body) {
       processStatement(bodyStmt, source, tokens);
     }
   } else {
-    pushVariantTokens(stmt, span, stmtText, tokens);
+    pushVariantTokens(inner, source, tokens);
   }
 }
 
 function pushVariantTokens(
-  stmt: Exclude<Statement, "Empty" | string>,
-  span: Span,
-  stmtText: string,
+  stmt: Statement,
+  source: string,
   tokens: RawToken[]
 ): void {
-  if ("Source" in stmt) {
-    pushInterpolatedTokens(stmt.Source.file, tokens);
-  } else if ("Echo" in stmt) {
+  if (stmt instanceof Source) {
+    pushInterpolatedTokens(stmt.file, tokens);
+  } else if (stmt instanceof Echo) {
     // Echo arguments are raw text (not SQL) — cover everything so TextMate
     // doesn't treat subsequent lines of a multi-line echo as SQL statements.
-    pushInterpolatedTokens(stmt.Echo.text, tokens, true);
-  } else if ("Output" in stmt) {
-    pushInterpolatedTokens(stmt.Output.file, tokens, true);
-  } else if ("Let" in stmt) {
-    pushLetTokens(stmt, span, stmtText, tokens);
-  } else if ("Inc" in stmt) {
-    pushVariableTokenByName(stmt.Inc.variable, span, stmtText, tokens);
-  } else if ("Dec" in stmt) {
-    pushVariableTokenByName(stmt.Dec.variable, span, stmtText, tokens);
-  } else if ("WriteFile" in stmt) {
-    pushInterpolatedTokens(stmt.WriteFile.filename, tokens);
-    pushEndMarkerTokens(stmt.WriteFile.end_marker, tokens);
-    pushFileContentTokens(stmt.WriteFile.content, tokens);
-  } else if ("AppendFile" in stmt) {
-    pushInterpolatedTokens(stmt.AppendFile.filename, tokens);
-    pushEndMarkerTokens(stmt.AppendFile.end_marker, tokens);
-    pushFileContentTokens(stmt.AppendFile.content, tokens);
-  } else if ("RemoveFile" in stmt) {
-    pushInterpolatedTokens(stmt.RemoveFile.file, tokens);
-  } else if ("CatFile" in stmt) {
-    pushInterpolatedTokens(stmt.CatFile.file, tokens);
-  } else if ("Mkdir" in stmt) {
-    pushInterpolatedTokens(stmt.Mkdir.dir, tokens);
-  } else if ("Rmdir" in stmt) {
-    pushInterpolatedTokens(stmt.Rmdir.dir, tokens);
-  } else if ("FileExists" in stmt) {
-    pushInterpolatedTokens(stmt.FileExists.file, tokens);
-  } else if ("CopyFile" in stmt) {
-    pushInterpolatedTokens(stmt.CopyFile.source, tokens);
-    pushInterpolatedTokens(stmt.CopyFile.dest, tokens);
-  } else if ("MoveFile" in stmt) {
-    pushInterpolatedTokens(stmt.MoveFile.source, tokens);
-    pushInterpolatedTokens(stmt.MoveFile.dest, tokens);
-  } else if ("DiffFiles" in stmt) {
-    pushInterpolatedTokens(stmt.DiffFiles.file1, tokens);
-    pushInterpolatedTokens(stmt.DiffFiles.file2, tokens);
-  } else if ("Chmod" in stmt) {
-    pushInterpolatedTokens(stmt.Chmod.file, tokens);
-  } else if ("Perl" in stmt) {
-    pushEndMarkerTokens(stmt.Perl.end_marker, tokens);
+    pushInterpolatedTokens(stmt.text, tokens, true);
+  } else if (stmt instanceof Output) {
+    pushInterpolatedTokens(stmt.file, tokens, true);
+  } else if (stmt instanceof Let) {
+    pushLetTokens(stmt, source, tokens);
+  } else if (stmt instanceof Inc) {
+    pushVariableSpanToken(stmt.variable_span, tokens);
+  } else if (stmt instanceof Dec) {
+    pushVariableSpanToken(stmt.variable_span, tokens);
+  } else if (stmt instanceof Expr) {
+    pushVariableSpanToken(stmt.variable_span, tokens);
+  } else if (stmt instanceof WriteFile) {
+    pushInterpolatedTokens(stmt.filename, tokens);
+    pushMarkerTokens(stmt.open, stmt.close, tokens);
+    pushBlockContentTokens(source, stmt.open, stmt.close, tokens);
+  } else if (stmt instanceof AppendFile) {
+    pushInterpolatedTokens(stmt.filename, tokens);
+    pushMarkerTokens(stmt.open, stmt.close, tokens);
+    pushBlockContentTokens(source, stmt.open, stmt.close, tokens);
+  } else if (stmt instanceof RemoveFile) {
+    pushInterpolatedTokens(stmt.file, tokens);
+  } else if (stmt instanceof CatFile) {
+    pushInterpolatedTokens(stmt.file, tokens);
+  } else if (stmt instanceof Mkdir) {
+    pushInterpolatedTokens(stmt.dir, tokens);
+  } else if (stmt instanceof Rmdir) {
+    pushInterpolatedTokens(stmt.dir, tokens);
+  } else if (stmt instanceof FileExists) {
+    pushInterpolatedTokens(stmt.file, tokens);
+  } else if (stmt instanceof CopyFile) {
+    pushInterpolatedTokens(stmt.source, tokens);
+    pushInterpolatedTokens(stmt.dest, tokens);
+  } else if (stmt instanceof MoveFile) {
+    pushInterpolatedTokens(stmt.source, tokens);
+    pushInterpolatedTokens(stmt.dest, tokens);
+  } else if (stmt instanceof DiffFiles) {
+    pushInterpolatedTokens(stmt.file1, tokens);
+    pushInterpolatedTokens(stmt.file2, tokens);
+  } else if (stmt instanceof Chmod) {
+    pushInterpolatedTokens(stmt.file, tokens);
+  } else if (stmt instanceof Perl) {
+    pushMarkerTokens(stmt.open, stmt.close, tokens);
   }
 }
 
@@ -191,14 +224,14 @@ function pushInterpolatedTokens(
   coverAll = false
 ): void {
   for (const part of text) {
-    if ("Variable" in part) {
-      const sp = part.Variable.span;
+    if (part instanceof Variable) {
+      const sp = part.span;
       tokens.push({ offset: sp.offset, length: sp.len, type: T.variable, modifiers: 0 });
     } else {
-      const t = part.Literal.text;
+      const t = part.text;
       if (!coverAll && !t.includes("'") && !t.includes('"')) continue;
-      let offset = part.Literal.span.offset;
-      let length = part.Literal.span.len;
+      let offset = part.span.offset;
+      let length = part.span.len;
       if (coverAll && t.endsWith(";")) {
         length -= 1;
       }
@@ -210,114 +243,189 @@ function pushInterpolatedTokens(
 }
 
 function pushLetTokens(
-  stmt: Extract<Statement, { Let: unknown }>,
-  span: Span,
-  stmtText: string,
+  cmd: Let,
+  source: string,
   tokens: RawToken[]
 ): void {
-  const cmd = stmt.Let;
-
-  // Declaration site: `$name` on the LHS
-  const declNeedle = `$${cmd.variable}`;
-  const rel = stmtText.indexOf(declNeedle);
-  if (rel >= 0) {
+  // Declaration site: exact span of the `$name` token on the LHS.
+  const vs = cmd.variable_span;
+  if (vs.len > 0) {
     tokens.push({
-      offset: span.offset + rel,
-      length: declNeedle.length,
+      offset: vs.offset,
+      length: vs.len,
       type: T.variable,
       modifiers: M.declaration,
     });
   }
 
-  // Value: Literal → plain text (only if it contains quotes)
-  // Query (backtick SQL) is left to TextMate's backtick rule + source.sql.
-  // QueryGetValue → function name + punctuation tokens; SQL args left to TextMate.
-  if ("QueryGetValue" in cmd.value) {
-    pushQueryGetValueTokens(cmd.value.QueryGetValue, tokens);
-  } else if ("Literal" in cmd.value) {
-    const t = cmd.value.Literal.value;
-    if (t.includes("'") || t.includes('"')) {
-      const sp = cmd.value.Literal.span;
-      tokens.push({ offset: sp.offset, length: sp.len, type: T.string, modifiers: 0, isStringContent: false });
-    }
-  }
-}
-
-function pushVariableTokenByName(
-  name: string,
-  span: Span,
-  stmtText: string,
-  tokens: RawToken[]
-): void {
-  const needle = `$${name}`;
-  const rel = stmtText.indexOf(needle);
-  if (rel >= 0) {
+  // Value: Text → plain text (only if it contains quotes)
+  // QueryValue (backtick SQL): SQL text is left to TextMate, but $var
+  // references inside the query carry exact TextPart spans — highlight them.
+  // QueryGetValue → function name token; SQL args left to TextMate.
+  const value = cmd.value;
+  if (value instanceof QueryGetValue) {
+    // The value span starts at the literal `query_get_value` callee.
     tokens.push({
-      offset: span.offset + rel,
-      length: needle.length,
-      type: T.variable,
+      offset: value.span.offset,
+      length: "query_get_value".length,
+      type: T.macro,
       modifiers: 0,
     });
+  } else if (value instanceof QueryValue) {
+    for (const part of value.query.query) {
+      if (part instanceof Variable) {
+        tokens.push({
+          offset: part.span.offset,
+          length: part.span.len,
+          type: T.variable,
+          modifiers: 0,
+        });
+      }
+    }
+  } else if (value instanceof LetText) {
+    const raw = interpolatedToRaw(value.value);
+    if (raw.includes("'") || raw.includes('"')) {
+      const loc = partsRegion(value.value);
+      if (loc && loc.length > 0) {
+        tokens.push({ offset: loc.offset, length: loc.length, type: T.string, modifiers: 0, isStringContent: false });
+      }
+    }
+  } else if (value instanceof Escape) {
+    // `escape(CHARACTERS, TEXT)` — the parser already resolved which `)` is
+    // the real closing paren (a `)` in CHARACTERS first position is an
+    // argument, per mysqltest.cc); the grammar cannot know this.
+    pushLetCallTokens(
+      "escape",
+      value.span,
+      [value.characters, value.string],
+      source,
+      tokens
+    );
+  } else if (value instanceof ConvertError) {
+    pushLetCallTokens(
+      "convert_error",
+      value.span,
+      [value.argument],
+      source,
+      tokens
+    );
   }
 }
 
-/** Push operator tokens for a block command's end_marker (open + close). */
-function pushEndMarkerTokens(em: EndMarker, tokens: RawToken[]): void {
-  // open_span: marker on the begin line (e.g. "EOF" in "--write_file path EOF").
-  //            Zero-length when the marker is implicit (omitted, defaults to EOF).
-  if (em.open_span.len > 0) {
-    tokens.push({ offset: em.open_span.offset, length: em.open_span.len, type: T.operator, modifiers: 0 });
+/**
+ * Tokens for a function-call let value: function name, the real opening and
+ * closing parens (both resolvable only via the AST span), and the argument
+ * parts (Literal → string, Variable → variable).
+ */
+function pushLetCallTokens(
+  name: string,
+  span: Span,
+  argLists: InterpolatedText[],
+  source: string,
+  tokens: RawToken[]
+): void {
+  // Function name at the start of the call span.
+  tokens.push({
+    offset: span.offset,
+    length: name.length,
+    type: T.macro,
+    modifiers: 0,
+  });
+
+  // Opening paren: first `(` inside the call span.
+  const openRel = source.indexOf("(", span.offset);
+  if (openRel >= 0 && openRel < span.offset + span.len) {
+    tokens.push({ offset: openRel, length: 1, type: T.operator, modifiers: 0 });
   }
-  // close_span: marker on the terminator line.
-  if (em.close_span.len > 0) {
-    tokens.push({ offset: em.close_span.offset, length: em.close_span.len, type: T.operator, modifiers: 0 });
+
+  // Closing paren: the call span ends at the real `)` — any earlier `)` is
+  // a character argument and is covered by the argument tokens below.
+  const close = span.offset + span.len - 1;
+  if (source.charAt(close) === ")") {
+    tokens.push({ offset: close, length: 1, type: T.operator, modifiers: 0 });
+  }
+
+  for (const parts of argLists) {
+    pushInterpolatedTokens(parts, tokens, true);
+  }
+}
+
+/** `$name` reference token from an exact AST span (inc/dec/expr targets). */
+function pushVariableSpanToken(vs: Span, tokens: RawToken[]): void {
+  if (vs.len > 0) {
+    tokens.push({ offset: vs.offset, length: vs.len, type: T.variable, modifiers: 0 });
+  }
+}
+
+/** Push operator tokens for a block command's end markers.
+ *  - open: marker on the begin line (e.g. "EOF" in "--write_file path EOF").
+ *          Zero-length when the marker is implicit (omitted, defaults to EOF).
+ *  - close: marker on the terminator line. */
+function pushMarkerTokens(open: Marker, close: Marker, tokens: RawToken[]): void {
+  if (open.span.len > 0) {
+    tokens.push({ offset: open.span.offset, length: open.span.len, type: T.operator, modifiers: 0 });
+  }
+  if (close.span.len > 0) {
+    tokens.push({ offset: close.span.offset, length: close.span.len, type: T.operator, modifiers: 0 });
   }
 }
 
 /** Push operator tokens for `{` and `}` braces of an If/While block. */
 function pushBraceTokens(
-  block: { open_brace_span?: Span; close_brace_span?: Span },
+  openBrace: Span,
+  closeBrace: Span,
   tokens: RawToken[]
 ): void {
-  if (block.open_brace_span && block.open_brace_span.len > 0) {
-    tokens.push({ offset: block.open_brace_span.offset, length: block.open_brace_span.len, type: T.operator, modifiers: 0 });
+  if (openBrace.len > 0) {
+    tokens.push({ offset: openBrace.offset, length: openBrace.len, type: T.operator, modifiers: 0 });
   }
-  if (block.close_brace_span && block.close_brace_span.len > 0) {
-    tokens.push({ offset: block.close_brace_span.offset, length: block.close_brace_span.len, type: T.operator, modifiers: 0 });
-  }
-}
-
-/** Push tokens for query_get_value call: function name + punctuation.
- *  Arguments (SQL, column name, row number) are left to TextMate. */
-function pushQueryGetValueTokens(call: {
-  function_name_span: Span;
-  open_paren_span: Span;
-  close_paren_span: Span;
-  commas: Span[];
-}, tokens: RawToken[]): void {
-  // Function name → function token
-  tokens.push({
-    offset: call.function_name_span.offset,
-    length: call.function_name_span.len,
-    type: T.macro,
-    modifiers: 0,
-  });
-  // Parentheses + commas → operator tokens
-  for (const sp of [call.open_paren_span, ...call.commas, call.close_paren_span]) {
-    if (sp.len > 0) {
-      tokens.push({ offset: sp.offset, length: sp.len, type: T.operator, modifiers: 0 });
-    }
+  if (closeBrace.len > 0) {
+    tokens.push({ offset: closeBrace.offset, length: closeBrace.len, type: T.operator, modifiers: 0 });
   }
 }
 
-/** Mark file content (write_file/append_file body) as string. */
-function pushFileContentTokens(content: InterpolatedText, tokens: RawToken[]): void {
-  for (const part of content) {
-    if ("Literal" in part) {
-      const sp = part.Literal.span;
-      if (sp.len > 0) {
-        tokens.push({ offset: sp.offset, length: sp.len, type: T.string, modifiers: 0 });
-      }
-    }
+/**
+ * Mark block content (write_file/append_file body) as string.
+ *
+ * mtparser 0.4 exposes content as a raw string without per-part spans, so
+ * the region is derived from the marker spans: everything between the end
+ * of the command's begin line and the start of the close-marker line.
+ */
+function pushBlockContentTokens(
+  source: string,
+  open: Marker,
+  close: Marker,
+  tokens: RawToken[]
+): void {
+  const afterBegin = open.span.offset + Math.max(open.span.len, 0);
+  const nl = source.indexOf("\n", afterBegin);
+  if (nl < 0) return;
+  const start = nl + 1;
+  // End: start of the line carrying the close marker.
+  const closeNl = source.lastIndexOf("\n", Math.max(close.span.offset - 1, 0));
+  const end = closeNl >= 0 ? closeNl + 1 : close.span.offset;
+  if (end > start) {
+    tokens.push({
+      offset: start,
+      length: end - start,
+      type: T.string,
+      modifiers: 0,
+      isStringContent: true,
+    });
   }
+}
+
+/** Region covering an InterpolatedText (first part start → last part end). */
+function partsRegion(
+  text: InterpolatedText
+): { offset: number; length: number } | undefined {
+  let first: Span | undefined;
+  let last: Span | undefined;
+  for (const part of text) {
+    const sp = part.span;
+    if (!first) first = sp;
+    last = sp;
+  }
+  if (!first || !last) return undefined;
+  return { offset: first.offset, length: last.offset + last.len - first.offset };
 }

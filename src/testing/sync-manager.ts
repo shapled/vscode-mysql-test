@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { findMysqlTestRoot } from "../utils/path-utils";
+import { findMysqlTestRoot, resolveRealPath } from "../utils/path-utils";
 
 /**
  * File extensions that should be synced alongside .test files.
@@ -20,12 +20,15 @@ export async function syncTestFile(sourcePath: string, installDir: string): Prom
     throw new Error(`Cannot find mysql-test root for: ${sourcePath}`);
   }
 
-  const normalizedSource = sourcePath.replace(/\\/g, "/");
+  // findMysqlTestRoot works on the real (symlink-resolved) path — compute
+  // the relative path in the same coordinate system, then re-attach it
+  // under <installDir>/mysql-test/.
+  const realSource = resolveRealPath(sourcePath);
   const normalizedRoot = root.replace(/\\/g, "/");
-  const relativePath = normalizedSource.substring(normalizedRoot.length);
+  const relativePath = realSource.substring(normalizedRoot.length); // "/suite/.../alias.test"
 
   // Sync the main file
-  await copyFile(sourcePath, path.join(installDir, relativePath));
+  await copyFile(sourcePath, path.join(installDir, "mysql-test", relativePath));
 
   // Sync associated files (same base name, different extension)
   const dir = path.dirname(sourcePath);
@@ -36,7 +39,7 @@ export async function syncTestFile(sourcePath: string, installDir: string): Prom
     const associatedPath = path.join(dir, baseName + ext);
     if (fs.existsSync(associatedPath)) {
       const associatedRelative = path.join(path.dirname(relativePath), baseName + ext);
-      await copyFile(associatedPath, path.join(installDir, associatedRelative));
+      await copyFile(associatedPath, path.join(installDir, "mysql-test", associatedRelative));
     }
   }
 
@@ -49,7 +52,7 @@ export async function syncTestFile(sourcePath: string, installDir: string): Prom
           path.dirname(relativePath),
           baseName + suffix + ext
         );
-        await copyFile(variantPath, path.join(installDir, variantRelative));
+        await copyFile(variantPath, path.join(installDir, "mysql-test", variantRelative));
       }
     }
   }

@@ -12,7 +12,9 @@ import {
   findStatementAtOffset,
   findVariableDeclaration,
   sourcePath,
+  unwrapStatement,
 } from "../ast/ast-query";
+import { Source } from "@shapled/mtparser/ast";
 import { findMysqlTestRoot } from "../utils/path-utils";
 
 export class MtrDefinitionProvider implements vscode.DefinitionProvider {
@@ -26,8 +28,9 @@ export class MtrDefinitionProvider implements vscode.DefinitionProvider {
     const stmt = findStatementAtOffset(statements, offset);
 
     // --source / --include: jump to the referenced file
-    if (stmt && typeof stmt === "object" && "Source" in stmt) {
-      const incPath = sourcePath(stmt.Source);
+    const cmd = stmt ? unwrapStatement(stmt) : undefined;
+    if (cmd instanceof Source) {
+      const incPath = sourcePath(cmd);
       const resolved = resolveIncPathString(document.uri.fsPath, incPath);
       if (resolved) {
         return [
@@ -45,9 +48,9 @@ export class MtrDefinitionProvider implements vscode.DefinitionProvider {
     if (varName) {
       const decl = findVariableDeclaration(statements, varName);
       if (decl) {
-        // Convert byte offset → Position
-        const declPos = document.positionAt(decl.span.offset);
-        const declEnd = document.positionAt(decl.span.offset + decl.span.len);
+        // Exact span of the `$name` token (register vars and env names too)
+        const declPos = document.positionAt(decl.variable_span.offset);
+        const declEnd = document.positionAt(decl.variable_span.offset + decl.variable_span.len);
         return new vscode.Location(
           document.uri,
           new vscode.Range(declPos, declEnd)

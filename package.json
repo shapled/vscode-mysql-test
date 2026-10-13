@@ -1,6 +1,6 @@
 {
   "name": "mysql-test",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "displayName": "MySQL Test Run",
   "description": "Run MySQL test cases (MTR) from VS Code with syntax highlighting, navigation, and test management",
   "publisher": "shapled",
@@ -251,7 +251,10 @@
       {
         "language": "mysql-test",
         "scopeName": "source.mysql-test",
-        "path": "./syntaxes/mysql-test.tmLanguage.json"
+        "path": "./syntaxes/mysql-test.tmLanguage.json",
+        "unbalancedBracketScopes": [
+          "meta.escape.arguments.mysql-test"
+        ]
       },
       {
         "language": "mysql-result",
@@ -279,6 +282,7 @@
     "package": "tsc --noEmit && node esbuild.js --production && vsce package"
   },
   "devDependencies": {
+    "@shapled/mtparser": "0.4.1",
     "@types/node": "^25.6.0",
     "@types/vscode": "^1.85.0",
     "@vscode/vsce": "^3.9.1",
@@ -288,8 +292,5 @@
     "vscode-oniguruma": "^1.7.0",
     "vscode-textmate": "^9.3.2"
   },
-  "packageManager": "pnpm@10.18.3",
-  "dependencies": {
-    "@shapled/mtparser": "0.3.3"
-  }
+  "packageManager": "pnpm@10.18.3"
 }

@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
-import type { Statement } from "@shapled/mtparser";
+import type { Statement$ as Statement } from "@shapled/mtparser/ast";
 import { astCache } from "../ast/ast-cache";
-import { parseMt } from "../wasm/wasm-loader";
+import { parseMt } from "../ast/parse";
 import { interpolatedToRaw } from "../ast/helpers";
 import {
   findVariableOccurrences,
@@ -29,9 +29,6 @@ export class MtrReferenceProvider implements vscode.ReferenceProvider {
     const line = document.lineAt(position.line).text;
     const varName = variableAtPosition(line, position.character);
     if (!varName) return [];
-
-    // Ensure WASM is ready before recursive parsing
-    await astCache.ensureInitialized();
 
     const refs = findReferencesRecursive(
       document.uri.fsPath,
@@ -62,7 +59,14 @@ function findReferencesRecursive(
   const content = readText(filePath);
   if (content === undefined) return [];
 
-  const statements = parseMt(content, undefined);
+  let statements: Statement[];
+  try {
+    statements = parseMt(content);
+  } catch {
+    // The parser is fail-fast; a syntax error in one file of the include
+    // graph shouldn't kill reference lookup for the rest.
+    return [];
+  }
 
   const results: FileVariableLocation[] = [];
 

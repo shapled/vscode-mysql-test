@@ -17,29 +17,27 @@ import { getOutputChannel } from "./testing/output-channel";
 import { initOutputChannel } from "./testing/output-channel";
 import { activateTreeView } from "./testing/tree-view";
 import { astCache } from "./ast/ast-cache";
-import { initWasm, parseMt } from "./wasm/wasm-loader";
+import { parseMt } from "./ast/parse";
 
 export async function activate(context: vscode.ExtensionContext) {
   // Initialize shared output channel
   initOutputChannel(context);
 
-  // ── WASM parser (mtparser) ───────────────────────────────
-  // Pre-load eagerly so providers don't block on first use.
+  // ── Parser (mtparser) sanity check ───────────────────────
+  // mtparser 0.4+ is pure JS — no async init needed. Parse a sample once
+  // so a broken install surfaces in the output channel immediately.
   const outputChannel = getOutputChannel();
   astCache.register(context);
-  void initWasm()
-    .then(() => {
-      const sample = "--source include/have_debug.inc\n--let $x = 1\n";
-      const ast = parseMt(sample, "8.0");
-      outputChannel.appendLine(
-        `[mtparser] WASM loaded OK; sample parse returned ${ast.length} statements`
-      );
-    })
-    .catch((err: unknown) => {
-      const msg = err instanceof Error ? err.stack ?? err.message : String(err);
-      outputChannel.appendLine(`[mtparser] WASM load FAILED: ${msg}`);
-      outputChannel.show(true);
-    });
+  try {
+    const sample = "--source include/have_debug.inc\n--let $x = 1\n";
+    const ast = parseMt(sample);
+    outputChannel.appendLine(
+      `[mtparser] ready; sample parse returned ${ast.length} statements`
+    );
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.stack ?? err.message : String(err);
+    outputChannel.appendLine(`[mtparser] sample parse FAILED: ${msg}`);
+  }
 
   // Register testing (creates TestController)
   activateTesting(context);

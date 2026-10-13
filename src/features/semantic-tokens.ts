@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import type { Statement } from "@shapled/mtparser";
+import type { Statement } from "../ast/parse";
 import { astCache } from "../ast/ast-cache";
 import {
   extractTokens,

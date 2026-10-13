@@ -1,3 +1,38 @@
+## [2.0.0]
+
+### Parser Engine Replacement (mtparser 0.4, breaking)
+
+- Replace the Rust/WASM **@shapled/mtparser** 0.3.x with the Gleam-compiled pure-JS **0.4.1** — no WASM binary, no async initialization, no experimental Node flags
+- Remove the `wasm-loader` runtime patching entirely; the parser is bundled by esbuild as a regular dependency (VSIX shrinks ~90 KB, ships no `node_modules`)
+- Adapt all AST consumers to the new class-based AST: `DashCommand` wrapper for `--` prefixed commands, `Marker` end markers, `LetValue` variants (`Text`/`QueryValue`/`QueryGetValue`/`Escape`/`ConvertError`)
+- Span units are now **UTF-16 code units** (was UTF-8 bytes in 0.3.x) — token positions are correct in files containing non-ASCII text (validated over 20k+ real MySQL/MariaDB test files)
+- Parse failures degrade gracefully: references lookup skips broken include files instead of failing the whole request
+
+### Semantic Highlighting
+
+- `escape()`/`convert_error()` let values: function name, the **real** opening/closing parens, and argument tokens — the parser resolves which `)` is a character argument (e.g. `escape(), hihi (haha))`), which regexes cannot
+- `$var` references inside backtick query values (`--let $x= \`select $a-$b\``) highlighted with exact spans
+- `--let`/`--inc`/`--dec`/`--expr` variables use exact `variable_span` tokens instead of text re-scanning
+- `--` prefix token uses the AST's exact dash span; `write_file`/`append_file` content regions derived from marker spans
+
+### Bracket Pairing Fix
+
+- `escape(...)` argument regions carry `meta.escape.arguments` and are excluded from bracket pairing via `unbalancedBracketScopes` — the `(` now pairs with the final `)` instead of the first character-argument `)`; SQL bracket pairing is unaffected
+
+### Navigation
+
+- Variable declarations, references, and `--source` includes **inside `if`/`while` blocks** are now found (recursive AST walk) — `if($ts_flag)` jumps to a `--let` declared in the same block
+- Cursor resolution prefers the innermost statement, so Go-to-Definition works on `--source` lines nested in blocks
+- Variable occurrences no longer double-count inside blocks (block headers and bodies are scanned disjointly)
+- Go-to-Definition for `--let` targets the exact `$name` token (env-style declarations without `$` supported)
+- File-path links use exact `TextPart` spans — `--chmod 0644 file` now links the file, not the mode
+
+### Fixes
+
+- **Sync and Run Test / Run & Record / Debug** pre-sync copied files to `<installDir>/suite/...` instead of `<installDir>/mysql-test/suite/...` (the `mysql-test` path segment was dropped; the sync log printed the correct target, masking the bug)
+- Relative-path computation mixed symlink-resolved roots with unresolved source paths — paths through symlinks now sync correctly
+- Removed unused `syncTestFile` import from the tree view
+
 ## [1.2.0]
 
 ### Structured AST Parsing (mtparser)

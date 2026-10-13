@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
 import { getConfig } from "../config";
-import { syncTestFile } from "./sync-manager";
 import { getOutputChannel } from "./output-channel";
 import { getSourceRoots } from "./build-trigger";
 import { deriveTestName } from "../utils/path-utils";

@@ -1,29 +1,19 @@
 import * as vscode from "vscode";
-import type { Statement } from "@shapled/mtparser";
-import { initWasm, parseMt } from "../wasm/wasm-loader";
+import type { Statement$ as Statement } from "@shapled/mtparser/ast";
+import { parseMt } from "./parse";
 
 /**
  * Per-document AST cache.
  *
- * The mtparser WASM module parses the full file each time; results are cached
- * keyed by (uri, version) so providers don't re-parse on every keystroke.
- * The cache invalidates automatically on document change/close.
+ * mtparser (0.4+, pure JS) parses the full file synchronously; results are
+ * cached keyed by (uri, version) so providers don't re-parse on every
+ * keystroke. The cache invalidates automatically on document change/close.
  */
 class AstCacheService {
   private cache = new Map<
     string,
     { version: number; promise: Promise<Statement[]> }
   >();
-
-  private initialized = false;
-
-  /** Ensure WASM is loaded. Safe to call repeatedly. */
-  async ensureInitialized(): Promise<void> {
-    if (!this.initialized) {
-      await initWasm();
-      this.initialized = true;
-    }
-  }
 
   /** Get the parsed AST for a document, parsing if necessary. */
   async get(document: vscode.TextDocument): Promise<Statement[]> {
@@ -35,10 +25,9 @@ class AstCacheService {
       return hit.promise;
     }
 
-    const promise = (async () => {
-      await this.ensureInitialized();
-      return parseMt(document.getText(), undefined);
-    })();
+    const promise = Promise.resolve().then(() =>
+      parseMt(document.getText())
+    );
 
     this.cache.set(key, { version, promise });
     return promise;

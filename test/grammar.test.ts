@@ -171,6 +171,62 @@ describe("mysql-test grammar: MTR function highlighting", () => {
   });
 });
 
+describe("mysql-test grammar: escape() bracket-pair exclusion", () => {
+  // escape(CHARACTERS, TEXT): ')' before the last one is an ARGUMENT. The
+  // argument region carries meta.escape.arguments (excluded from bracket
+  // pairing via unbalancedBracketScopes), so '(' pairs with the FINAL ')'
+  // only — a text-match pairing of "()" right after escape would wrongly
+  // present the first ')' as the call's closing paren.
+
+  function scopesAt(tokens: Token[], index: number): string[] {
+    const t = tokens.find((t) => index >= t.startIndex && index < t.endIndex);
+    return t ? t.scopes : [];
+  }
+
+  const line = "--let $x = escape(), hihi (haha))";
+
+  it("highlights escape as function with argument punctuation", () => {
+    const { tokens } = tokenizeLine(line);
+    expect(hasScopeInTokens(tokens, "entity.name.function.mtr"), "escape as function").toBe(true);
+    const open = line.indexOf("(");
+    const close = line.lastIndexOf(")");
+    expect(scopesAt(tokens, open).some((s) => s.includes("punctuation.definition.arguments.begin")), "'(' as argument begin").toBe(true);
+    expect(scopesAt(tokens, close).some((s) => s.includes("punctuation.definition.arguments.end")), "final ')' as argument end").toBe(true);
+  });
+
+  it("wraps only the arguments in meta.escape.arguments", () => {
+    const { tokens } = tokenizeLine(line);
+    const charsClose = line.indexOf(")");      // first ')' — a character argument
+    const innerOpen = line.indexOf("(haha");   // parens inside the text argument
+    const finalClose = line.lastIndexOf(")");  // the real closing paren
+    const inMeta = (i: number) => scopesAt(tokens, i).some((s) => s.includes("meta.escape.arguments"));
+    expect(inMeta(charsClose), "first ')' is inside the argument region (excluded from pairing)").toBe(true);
+    expect(inMeta(innerOpen), "'(haha' is inside the argument region").toBe(true);
+    expect(inMeta(finalClose), "final ')' must NOT be in the argument region (it pairs with '(')").toBe(false);
+  });
+
+  it("does not leak the region to the next line", () => {
+    const first = tokenizeLine(line);
+    const second = tokenizeLine("SELECT 1;", first.ruleStack);
+    expect(
+      second.tokens.some((t) => t.scopes.some((s) => s.includes("meta.escape.arguments"))),
+      "meta.escape.arguments must not leak into the following line"
+    ).toBe(false);
+  });
+
+  it("ends the region before a trailing comment", () => {
+    const commented = "let $x = escape(a, b) # trailing";
+    const { tokens } = tokenizeLine(commented);
+    const close = commented.indexOf(")");
+    const argStart = commented.indexOf("(a,") + 1; // the 'a' argument (not the 'a' in "escape")
+    const inMeta = (i: number) => scopesAt(tokens, i).some((s) => s.includes("meta.escape.arguments"));
+    expect(inMeta(argStart), "argument before ')' in region").toBe(true);
+    expect(inMeta(close), "')' before the comment ends the region").toBe(false);
+    // Text after the ')' (the trailing comment) is outside the region.
+    expect(inMeta(commented.indexOf("#")), "text after ')' outside the region").toBe(false);
+  });
+});
+
 describe("mysql-test grammar: directive SQL isolation", () => {
   it("should NOT highlight SQL keywords in --echo content", () => {
     const { tokens } = tokenizeLine("--echo INSERT INTO t1;");

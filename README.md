@@ -119,7 +119,7 @@ Autocompletion for file paths in `source` / `include` commands:
 
 ### AST-Based Parsing (mtparser)
 
-All language features (hover, definition, references, highlight, completion, semantic tokens) are backed by [**@shapled/mtparser**](https://github.com/shapled/mtparser) — a Rust-based parser for MySQL `mysqltest` and MariaDB `mariadb-test` files, compiled to WASM.
+All language features (hover, definition, references, highlight, completion, semantic tokens) are backed by [**@shapled/mtparser**](https://github.com/shapled/mtparser) — a gleam-based parser for MySQL `mysqltest` and MariaDB `mariadb-test` files.
 
 **What it provides:**
 
@@ -169,4 +169,4 @@ See [CHANGELOG.md](CHANGELOG.md).
 
 ## Powered By
 
-[**mtparser**](https://github.com/shapled/mtparser) — A Rust-based parser for MySQL `mysqltest` and MariaDB `mariadb-test` files. If you're building tooling around `.test`/`.inc` files (linters, formatters, language servers), check it out!
+[**mtparser**](https://github.com/shapled/mtparser) — A gleam-based parser for MySQL `mysqltest` and MariaDB `mariadb-test` files. If you're building tooling around `.test`/`.inc` files (linters, formatters, language servers), check it out!

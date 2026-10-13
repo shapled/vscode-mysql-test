@@ -7,11 +7,10 @@ settings:
 importers:
 
   .:
-    dependencies:
-      '@shapled/mtparser':
-        specifier: 0.3.3
-        version: 0.3.3
     devDependencies:
+      '@shapled/mtparser':
+        specifier: 0.4.1
+        version: 0.4.1
       '@types/node':
         specifier: ^25.6.0
         version: 25.6.0
@@ -427,8 +426,8 @@ packages:
     resolution: {integrity: sha512-Nqc90v4lWCXyakD6xNyNACBJNJ0tNCwj2WNk/7ivyacYHxiITVgmLUFXTBOeCdy79iz6HtN9Y31uw/jbLrdOAg==}
     engines: {node: '>=20.0.0'}
 
-  '@shapled/mtparser@0.3.3':
-    resolution: {integrity: sha512-ueXT4cagsi0qDea+4NkdB/en+cqQTajGeJr9ltIfvJVYm3C5RFRagqEjPKhHGnpmfl1FZwRq00aVlylalWOJLw==}
+  '@shapled/mtparser@0.4.1':
+    resolution: {integrity: sha512-h5MtZkgdwnJHUCqOTHReopQIt+x6YUnMXBFOLf95vKU/0thbAqeKpOVk5BVfzbIn7AMztd/1FFVGUicxvsuutw==}
 
   '@sindresorhus/merge-streams@2.3.0':
     resolution: {integrity: sha512-LtoMMhxAlorcGhmFYI+LhPgbPZCkgP6ra1YL604EeF6U98pLlQ3iWIGMdWSC+vWmPBWBNgmDBAhnAobLROJmwg==}
@@ -2098,7 +2097,7 @@ snapshots:
 
   '@secretlint/types@10.2.2': {}
 
-  '@shapled/mtparser@0.3.3': {}
+  '@shapled/mtparser@0.4.1': {}
 
   '@sindresorhus/merge-streams@2.3.0': {}
 

@@ -21,7 +21,7 @@ export class MtrDocumentLinkProvider
     _token: vscode.CancellationToken
   ): Promise<vscode.DocumentLink[]> {
     const statements = await astCache.get(document);
-    const refs = findFilePaths(statements, document.getText());
+    const refs = findFilePaths(statements);
 
     const links: vscode.DocumentLink[] = [];
 
